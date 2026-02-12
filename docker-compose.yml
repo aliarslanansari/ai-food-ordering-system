@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    container_name: ai-food-ordering
+    ports:
+      - "5200:5200"
+    environment:
+      - NODE_ENV=production
+      - PORT=5200
+    env_file:
+      - .env
+    volumes:
+      - sqlite_data:/app/backend
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
