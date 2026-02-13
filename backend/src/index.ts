@@ -1,13 +1,18 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import { initDB } from "./db/init.js";
 import path from "path";
+import { loadFoods } from "./services/data.service.js";
+import { loadEmbeddings } from "./services/embedding.service.js";
+import { hybridSearch } from "./services/retrieval.service.js";
+import searchRoutes from "./routes/search.routes.js";
+
+loadFoods();
+loadEmbeddings();
+initDB();
 
 const __dirname = path.resolve();
 const frontendPath = path.join(__dirname, "dist-frontend");
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5200;
@@ -20,11 +25,11 @@ const PORT = process.env.PORT || 5200;
 app.use(cors());
 app.use(express.json());
 
-initDB();
-
 app.get("/health", (_req, res) => {
   res.json({ status: "Backend running" });
 });
+
+app.use("/api/search", searchRoutes);
 
 app.use(express.static(frontendPath));
 
