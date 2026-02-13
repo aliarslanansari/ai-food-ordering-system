@@ -3,3 +3,7 @@ frontend/node_modules
 .env
 .history
 backend/dist
+backend/.env
+.DS_Store
+backend/app.db
+backend/src/data/.DS_Store
