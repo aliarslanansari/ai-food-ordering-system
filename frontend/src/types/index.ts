@@ -140,6 +140,7 @@ export interface Order {
   address: string;
   deliveryInstructions?: string;
   createdAt: number;
+  itemCount?: number; // For list views
 }
 
 export interface CreateOrderInput {

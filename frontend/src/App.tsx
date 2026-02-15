@@ -1,11 +1,12 @@
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "./stores/auth";
 import Chat from "./pages/Chat";
 import Browse from "./pages/Browse";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
+import OrderHistory from "./pages/OrderHistory";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function App() {
@@ -14,7 +15,6 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes */}
         <Route
           path="/login"
           element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
@@ -23,8 +23,6 @@ function App() {
           path="/signup"
           element={isAuthenticated ? <Navigate to="/" replace /> : <Signup />}
         />
-
-        {/* Protected routes - require authentication */}
         <Route
           path="/checkout"
           element={
@@ -41,8 +39,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* Public routes (guests can chat) */}
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <OrderHistory />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/" element={<Chat />} />
         <Route path="/browse" element={<Browse />} />
       </Routes>
