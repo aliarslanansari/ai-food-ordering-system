@@ -45,8 +45,10 @@ function calculateStats() {
   const avgCarbs = carbs.reduce((sum, c) => sum + c, 0) / carbs.length;
 
   // Calculate quartiles for better thresholds
-  const proteinQ1 = proteins[Math.floor(proteins.length * 0.25)] || avgProtein * 0.7;
-  const proteinQ3 = proteins[Math.floor(proteins.length * 0.75)] || avgProtein * 1.3;
+  const proteinQ1 =
+    proteins[Math.floor(proteins.length * 0.25)] || avgProtein * 0.7;
+  const proteinQ3 =
+    proteins[Math.floor(proteins.length * 0.75)] || avgProtein * 1.3;
   const carbsQ1 = carbs[Math.floor(carbs.length * 0.25)] || avgCarbs * 0.7;
   const carbsQ3 = carbs[Math.floor(carbs.length * 0.75)] || avgCarbs * 1.3;
 
@@ -74,15 +76,6 @@ function calculateStats() {
 export function normalizeFilters(rawFilters: RawFilters = {}): Filters {
   const filters: Filters = {};
   const stats = calculateStats();
-
-  console.log("Nutrition statistics:", {
-    avgProtein: stats.avgProtein.toFixed(1),
-    avgCarbs: stats.avgCarbs.toFixed(1),
-    proteinQ1: stats.proteinQ1.toFixed(1),
-    proteinQ3: stats.proteinQ3.toFixed(1),
-    carbsQ1: stats.carbsQ1.toFixed(1),
-    carbsQ3: stats.carbsQ3.toFixed(1),
-  });
 
   // Category filter (pass through as-is)
   if (rawFilters.category && rawFilters.category.trim().length > 0) {
@@ -144,7 +137,6 @@ export function normalizeFilters(rawFilters: RawFilters = {}): Filters {
     }
   }
 
-  console.log("Normalized filters:", filters);
   return filters;
 }
 
@@ -161,7 +153,9 @@ export function describeFilters(filters: Filters): string {
   }
 
   if (filters.vegetarian !== undefined) {
-    descriptions.push(filters.vegetarian ? "Vegetarian only" : "Non-vegetarian included");
+    descriptions.push(
+      filters.vegetarian ? "Vegetarian only" : "Non-vegetarian included",
+    );
   }
 
   if (filters.spiceLevel) {
@@ -180,7 +174,7 @@ export function describeFilters(filters: Filters): string {
     descriptions.push(`Price ≤ ₹${filters.maxPrice}`);
   }
 
-  return descriptions.length > 0 
-    ? descriptions.join(", ") 
+  return descriptions.length > 0
+    ? descriptions.join(", ")
     : "No filters applied";
 }
