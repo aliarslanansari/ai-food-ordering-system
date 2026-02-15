@@ -8,6 +8,7 @@ import { loadEmbeddings } from "./services/embedding.service.js";
 import searchRoutes from "./routes/search.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import orderRoutes from "./routes/order.routes.js";
 
 // Get proper __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -78,6 +79,7 @@ app.get("/health", (_req, res) => {
 app.use("/api/auth", authRoutes); // NEW - Auth routes
 app.use("/api/search", searchRoutes);
 app.use("/api/cart", cartRoutes); // NEW - Cart routes
+app.use("/api/orders", orderRoutes); // NEW - Order routes
 
 // Serve frontend
 app.use(express.static(frontendPath));

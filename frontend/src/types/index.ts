@@ -135,16 +135,17 @@ export interface Order {
     | "out_for_delivery"
     | "delivered"
     | "cancelled";
-  deliveryName: string;
-  deliveryPhone: string;
-  deliveryAddress: string;
+  customerName: string;
+  phone: string;
+  address: string;
   deliveryInstructions?: string;
   createdAt: number;
 }
 
 export interface CreateOrderInput {
-  deliveryName: string;
-  deliveryPhone: string;
-  deliveryAddress: string;
-  deliveryInstructions?: string;
+  session_id?: string;
+  customer_name: string;
+  phone: string;
+  address: string;
+  delivery_instructions?: string;
 }

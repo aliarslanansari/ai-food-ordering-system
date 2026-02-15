@@ -4,6 +4,9 @@ import Chat from "./pages/Chat";
 import Browse from "./pages/Browse";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Checkout from "./pages/Checkout";
+import OrderConfirmation from "./pages/OrderConfirmation";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -21,7 +24,25 @@ function App() {
           element={isAuthenticated ? <Navigate to="/" replace /> : <Signup />}
         />
 
-        {/* Protected routes */}
+        {/* Protected routes - require authentication */}
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/order-confirmation/:orderId"
+          element={
+            <ProtectedRoute>
+              <OrderConfirmation />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Public routes (guests can chat) */}
         <Route path="/" element={<Chat />} />
         <Route path="/browse" element={<Browse />} />
       </Routes>
