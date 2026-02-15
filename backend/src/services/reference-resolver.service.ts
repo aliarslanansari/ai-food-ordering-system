@@ -25,6 +25,7 @@ export class ReferenceResolver {
 
     // Get session context
     const context = this.sessionService.getContext(sessionId);
+    console.log({ context });
     if (
       !context ||
       !context.last_mentioned_items ||

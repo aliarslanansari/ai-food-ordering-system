@@ -9,10 +9,17 @@ import searchRoutes from "./routes/search.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import orderRoutes from "./routes/order.routes.js";
+import foodsRoutes from "./routes/foods.routes.js";
 
 // Get proper __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// CORS configuration
+const corsOrigins = process.env.CORS_ORIGINS?.split(",") || [
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
 
 // CRITICAL: Initialize database ONCE with the correct path
 const dbPath = path.join(__dirname, "..", "app.db");
@@ -44,12 +51,18 @@ loadFoods();
 loadEmbeddings();
 console.log("✅ Data loaded!");
 
-const frontendPath = path.join(__dirname, "..", "dist-frontend");
-
 const app = express();
 const PORT = process.env.PORT || 5200;
 
-app.use(cors());
+// CORS configuration
+app.use(
+  cors({
+    origin: corsOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 app.use(express.json());
 
 // Health check with database stats
@@ -80,13 +93,7 @@ app.use("/api/auth", authRoutes); // NEW - Auth routes
 app.use("/api/search", searchRoutes);
 app.use("/api/cart", cartRoutes); // NEW - Cart routes
 app.use("/api/orders", orderRoutes); // NEW - Order routes
-
-// Serve frontend
-app.use(express.static(frontendPath));
-
-app.get(/(.*)/, (_req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
+app.use("/api/foods", foodsRoutes); // NEW - Foods routes
 
 // Start server
 const server = app.listen(PORT, () => {
