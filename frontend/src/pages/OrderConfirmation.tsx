@@ -63,27 +63,27 @@ export default function OrderConfirmationPage() {
   });
 
   return (
-    <div className="min-h-screen bg-stone-50 py-8 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-stone-50 py-4 sm:py-8 px-3 sm:px-4">
+      <div className="max-w-2xl xl:max-w-3xl mx-auto">
         {/* Success Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-            <CheckCircle className="h-8 w-8 text-green-600" />
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full mb-3 sm:mb-4">
+            <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
           </div>
-          <h1 className="text-2xl font-bold text-stone-800 mb-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-stone-800 mb-2">
             Order Placed Successfully!
           </h1>
-          <p className="text-stone-600">
+          <p className="text-stone-600 text-sm sm:text-base">
             Thank you for your order. We'll start preparing it right away.
           </p>
         </div>
 
         {/* Order Details Card */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+        <Card className="mb-4 sm:mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center justify-between text-base sm:text-lg">
               <span>Order Details</span>
-              <span className="text-sm font-normal text-stone-500">
+              <span className="text-xs sm:text-sm font-normal text-stone-500">
                 #{order.id.slice(-8).toUpperCase()}
               </span>
             </CardTitle>
@@ -181,18 +181,20 @@ export default function OrderConfirmationPage() {
         </Card>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button
             variant="outline"
             onClick={() => navigate("/")}
-            className="flex-1"
+            className="flex-1 h-10 sm:h-11"
+            size="sm"
           >
             <Home className="mr-2 h-4 w-4" />
             Back to Chat
           </Button>
           <Button
             onClick={() => navigate("/orders")}
-            className="flex-1 bg-orange-600 hover:bg-orange-700"
+            className="flex-1 bg-orange-600 hover:bg-orange-700 h-10 sm:h-11"
+            size="sm"
           >
             <ShoppingBag className="mr-2 h-4 w-4" />
             View Orders

@@ -40,16 +40,26 @@ export default function Login() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your account to continue</CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-stone-50 p-3 sm:p-4">
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader className="text-center pb-4 sm:pb-6">
+          <div className="mx-auto w-12 h-12 sm:w-14 sm:h-14 bg-orange-100 rounded-full flex items-center justify-center mb-3 sm:mb-4">
+            <span className="text-xl sm:text-2xl">🍛</span>
+          </div>
+          <CardTitle className="text-xl sm:text-2xl">Welcome Back</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            Sign in to your account to continue
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={formik.handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+          <form
+            onSubmit={formik.handleSubmit}
+            className="space-y-3 sm:space-y-4"
+          >
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="email" className="text-sm">
+                Email
+              </Label>
               <Input
                 id="email"
                 name="email"
@@ -58,14 +68,19 @@ export default function Login() {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.email}
+                className="h-10 sm:h-11"
               />
               {formik.touched.email && formik.errors.email && (
-                <p className="text-sm text-red-500">{formik.errors.email}</p>
+                <p className="text-xs sm:text-sm text-red-500">
+                  {formik.errors.email}
+                </p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="password" className="text-sm">
+                Password
+              </Label>
               <Input
                 id="password"
                 name="password"
@@ -74,15 +89,18 @@ export default function Login() {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.password}
+                className="h-10 sm:h-11"
               />
               {formik.touched.password && formik.errors.password && (
-                <p className="text-sm text-red-500">{formik.errors.password}</p>
+                <p className="text-xs sm:text-sm text-red-500">
+                  {formik.errors.password}
+                </p>
               )}
             </div>
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full h-10 sm:h-11 mt-2"
               disabled={loginMutation.isPending || !formik.isValid}
             >
               {loginMutation.isPending ? (
@@ -96,9 +114,12 @@ export default function Login() {
             </Button>
           </form>
 
-          <p className="mt-4 text-center text-sm text-muted-foreground">
+          <p className="mt-4 text-center text-xs sm:text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link to="/signup" className="text-orange-600 hover:underline">
+            <Link
+              to="/signup"
+              className="text-orange-600 hover:underline font-medium"
+            >
               Sign up
             </Link>
           </p>
