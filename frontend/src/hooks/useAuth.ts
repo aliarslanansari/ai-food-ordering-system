@@ -84,3 +84,21 @@ export function useLogout() {
     toast.info("Logged out successfully");
   };
 }
+
+// Combined hook for convenience
+export function useAuth() {
+  const { data: userData } = useMe();
+  const login = useLogin();
+  const signup = useSignup();
+  const logout = useLogout();
+  const { token } = useAuthStore();
+
+  return {
+    user: userData?.user,
+    token,
+    isAuthenticated: !!token,
+    login,
+    signup,
+    logout,
+  };
+}

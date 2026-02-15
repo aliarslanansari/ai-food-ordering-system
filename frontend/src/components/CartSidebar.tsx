@@ -17,6 +17,7 @@ interface CartSidebarProps {
   itemCount: number;
   onUpdateQuantity: (itemId: string, quantity: number) => void;
   onRemoveItem: (itemId: string) => void;
+  onClearCart: () => void;
   onCheckout: () => void;
 }
 
@@ -26,6 +27,7 @@ export function CartSidebar({
   itemCount,
   onUpdateQuantity,
   onRemoveItem,
+  onClearCart,
   onCheckout,
 }: CartSidebarProps) {
   return (
@@ -114,12 +116,21 @@ export function CartSidebar({
                 <span className="font-semibold">Total</span>
                 <span className="font-bold text-lg">₹{total.toFixed(2)}</span>
               </div>
-              <Button
-                onClick={onCheckout}
-                className="w-full bg-orange-600 hover:bg-orange-700"
-              >
-                Proceed to Checkout
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={onClearCart}
+                  className="flex-1"
+                >
+                  Clear
+                </Button>
+                <Button
+                  onClick={onCheckout}
+                  className="flex-[2] bg-orange-600 hover:bg-orange-700"
+                >
+                  Checkout
+                </Button>
+              </div>
             </div>
           </>
         )}
