@@ -1,17 +1,38 @@
 services:
-  app:
-    build: .
-    container_name: ai-food-ordering
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ai-food-ordering-backend
     ports:
       - "5200:5200"
-    environment:
-      - NODE_ENV=production
-      - PORT=5200
     env_file:
-      - .env
+      - ./backend/.env
     volumes:
       - sqlite_data:/app/backend
     restart: unless-stopped
+    networks:
+      - ai-food-ordering-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Pass API URL at build time (required for Vite)
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5200/api}
+    container_name: ai-food-ordering-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - ai-food-ordering-network
 
 volumes:
   sqlite_data:
+
+networks:
+  ai-food-ordering-network:
+    driver: bridge

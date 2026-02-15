@@ -3,5 +3,15 @@ frontend/node_modules
 backend/node_modules
 .git
 .gitignore
-Dockerfile
-docker-compose.yml
+*.md
+.env.local
+frontend/dist
+backend/dist
+backend/app.db
+*.log
+.DS_Store
+.vscode
+.idea
+backend/node_modules
+frontend/node_modules
+node_modules
