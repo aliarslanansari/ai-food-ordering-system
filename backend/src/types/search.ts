@@ -1,0 +1,49 @@
+export enum SearchMode {
+  Hybrid = "hybrid",
+  SemanticOnly = "semantic_only",
+  Keyword = "keyword",
+  NoResults = "no_results",
+}
+
+export interface CartSummary {
+  has_cart: boolean;
+  item_count: number;
+  total: number;
+}
+
+export interface SearchResponse {
+  session_id: string;
+  is_new_session: boolean;
+  intent: string;
+  filters?: Record<string, any>;
+  filter_description?: string;
+  semantic_query?: string;
+  results?: any[];
+  total?: number;
+  search_mode?: SearchMode;
+  conversation?: {
+    message_count: number;
+    turn_number: number;
+  };
+  cart_summary?: CartSummary; // NEW - Cart info in every response
+  fallback_info?: {
+    original_filters: Record<string, any>;
+    reason: string;
+  };
+  message?: string;
+  suggestions?: string[];
+  error?: string;
+  // For add_to_cart intent
+  items_added?: any[];
+  cart?: any;
+  resolution?: {
+    reference: string;
+    resolved_to: string | string[];
+    confidence: number;
+    reason?: string;
+  };
+  // For details intent
+  item?: any;
+  // For checkout intent
+  next_step?: string;
+}
