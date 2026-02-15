@@ -163,57 +163,64 @@ export default function BrowsePage() {
     <div className="min-h-screen bg-stone-50">
       {/* Header */}
       <header className="bg-white border-b border-stone-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
+        <div className="max-w-7xl xl:max-w-8xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6 py-2 sm:py-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             {/* Left: Back & Logo */}
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/")}
+                className="px-2 sm:px-3"
+              >
                 <ArrowLeft className="h-4 w-4 mr-1" />
-                Back
+                <span className="hidden sm:inline">Back</span>
               </Button>
-              <h1 className="text-xl font-bold text-stone-800 hidden sm:block">
+              <h1 className="text-lg sm:text-xl font-bold text-stone-800">
                 Browse Menu
               </h1>
             </div>
 
             {/* Center: Search */}
-            <div className="flex-1 max-w-md">
+            <div className="flex-1 w-full sm:max-w-md order-3 sm:order-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
                 <Input
                   placeholder="Search foods, ingredients..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-9 sm:h-10"
                 />
               </div>
             </div>
 
             {/* Right: Cart */}
-            <Button variant="outline" className="relative">
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Cart</span>
-              {itemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {itemCount}
-                </span>
-              )}
-            </Button>
+            <div className="order-2 sm:order-3">
+              <Button variant="outline" size="sm" className="relative">
+                <ShoppingCart className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Cart</span>
+                {itemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Filters Bar */}
         <div className="border-t border-stone-200 bg-stone-50/50">
-          <div className="max-w-7xl mx-auto px-4 py-3">
-            <div className="flex flex-wrap items-center gap-3">
+          <div className="max-w-7xl xl:max-w-8xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6 py-2 sm:py-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-3">
               {/* Category Pills */}
-              <ScrollArea className="flex-1 whitespace-nowrap">
+              <ScrollArea className="flex-1 whitespace-nowrap w-full">
                 <div className="flex gap-2 pb-1">
                   {CATEGORIES.map((category) => (
                     <button
                       key={category}
                       onClick={() => setSelectedCategory(category)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      className={`px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors flex-shrink-0 ${
                         selectedCategory === category
                           ? "bg-orange-600 text-white"
                           : "bg-white text-stone-700 border border-stone-200 hover:border-orange-300"
@@ -225,56 +232,61 @@ export default function BrowsePage() {
                 </div>
               </ScrollArea>
 
-              <Separator
-                orientation="vertical"
-                className="h-6 hidden sm:block"
-              />
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <Separator
+                  orientation="vertical"
+                  className="h-6 hidden sm:block"
+                />
 
-              {/* Type Filter */}
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TYPE_FILTERS.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      <div className="flex items-center gap-2">
-                        {type.icon && <type.icon className="h-4 w-4" />}
-                        {type.label}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {/* Type Filter */}
+                <Select value={selectedType} onValueChange={setSelectedType}>
+                  <SelectTrigger className="w-[120px] sm:w-[140px] h-8 sm:h-9 text-xs sm:text-sm">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TYPE_FILTERS.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        <div className="flex items-center gap-2">
+                          {type.icon && <type.icon className="h-4 w-4" />}
+                          {type.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              {/* Sort */}
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SORT_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {/* Sort */}
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[130px] sm:w-[160px] h-8 sm:h-9 text-xs sm:text-sm">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl xl:max-w-8xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
         {/* Results Count */}
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-stone-600">
+          <p className="text-stone-600 text-sm sm:text-base">
             Showing <strong>{filteredFoods.length}</strong> items
             {selectedCategory !== "All" && (
               <span>
                 {" "}
-                in <Badge variant="secondary">{selectedCategory}</Badge>
+                in{" "}
+                <Badge variant="secondary" className="text-xs">
+                  {selectedCategory}
+                </Badge>
               </span>
             )}
           </p>
@@ -284,6 +296,7 @@ export default function BrowsePage() {
             <Button
               variant="ghost"
               size="sm"
+              className="text-xs h-8"
               onClick={() => {
                 setSearchQuery("");
                 setSelectedCategory("All");
@@ -298,7 +311,7 @@ export default function BrowsePage() {
 
         {/* Food Grid */}
         {filteredFoods.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
             {filteredFoods.map((food) => (
               <FoodCard
                 key={food.id}
@@ -309,9 +322,11 @@ export default function BrowsePage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-stone-500 text-lg mb-2">No foods found</p>
-            <p className="text-stone-400">
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-stone-500 text-base sm:text-lg mb-2">
+              No foods found
+            </p>
+            <p className="text-stone-400 text-sm">
               Try adjusting your search or filters
             </p>
           </div>

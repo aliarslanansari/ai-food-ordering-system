@@ -61,26 +61,26 @@ export default function ChatPage() {
         {/* Chat Area */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Messages */}
-          <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
-            <div className="space-y-4 max-w-4xl mx-auto">
+          <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 sm:p-4 lg:p-6">
+            <div className="space-y-4 max-w-3xl xl:max-w-4xl 2xl:max-w-5xl mx-auto">
               {messages.length === 0 ? (
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-semibold text-stone-800 mb-2">
+                <div className="text-center py-8 sm:py-12 lg:py-16">
+                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-stone-800 mb-2 sm:mb-3">
                     Welcome to SpiceRoute! 🍛
                   </h2>
-                  <p className="text-stone-600 mb-6">
+                  <p className="text-stone-600 mb-4 sm:mb-6 text-sm sm:text-base">
                     Your AI-powered Indian food ordering assistant
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-md mx-auto px-2 sm:px-0">
                     <button
                       onClick={() =>
                         handleSendMessage(
                           "Show me some spicy vegetarian curries",
                         )
                       }
-                      className="p-3 text-left bg-white rounded-lg border border-stone-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
+                      className="p-2.5 sm:p-3 text-left bg-white rounded-lg border border-stone-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
                     >
-                      <span className="text-sm text-stone-700">
+                      <span className="text-xs sm:text-sm text-stone-700 line-clamp-2">
                         "Show me some spicy vegetarian curries"
                       </span>
                     </button>
@@ -88,9 +88,9 @@ export default function ChatPage() {
                       onClick={() =>
                         handleSendMessage("I want something high protein")
                       }
-                      className="p-3 text-left bg-white rounded-lg border border-stone-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
+                      className="p-2.5 sm:p-3 text-left bg-white rounded-lg border border-stone-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
                     >
-                      <span className="text-sm text-stone-700">
+                      <span className="text-xs sm:text-sm text-stone-700 line-clamp-2">
                         "I want something high protein"
                       </span>
                     </button>
@@ -98,9 +98,9 @@ export default function ChatPage() {
                       onClick={() =>
                         handleSendMessage("Recommend tandoori dishes")
                       }
-                      className="p-3 text-left bg-white rounded-lg border border-stone-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
+                      className="p-2.5 sm:p-3 text-left bg-white rounded-lg border border-stone-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
                     >
-                      <span className="text-sm text-stone-700">
+                      <span className="text-xs sm:text-sm text-stone-700 line-clamp-2">
                         "Recommend tandoori dishes"
                       </span>
                     </button>
@@ -108,9 +108,9 @@ export default function ChatPage() {
                       onClick={() =>
                         handleSendMessage("What's good for under ₹500?")
                       }
-                      className="p-3 text-left bg-white rounded-lg border border-stone-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
+                      className="p-2.5 sm:p-3 text-left bg-white rounded-lg border border-stone-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
                     >
-                      <span className="text-sm text-stone-700">
+                      <span className="text-xs sm:text-sm text-stone-700 line-clamp-2">
                         "What's good for under ₹500?"
                       </span>
                     </button>
@@ -136,8 +136,8 @@ export default function ChatPage() {
           </ScrollArea>
 
           {/* Input */}
-          <div className="p-4 border-t border-stone-200 bg-white">
-            <div className="max-w-4xl mx-auto">
+          <div className="p-3 sm:p-4 lg:p-6 border-t border-stone-200 bg-white">
+            <div className="max-w-3xl xl:max-w-4xl 2xl:max-w-5xl mx-auto">
               <ChatInput
                 onSend={handleSendMessage}
                 isLoading={isPending}

@@ -97,20 +97,27 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-stone-50">
       {/* Header */}
-      <header className="bg-white border-b border-stone-200 px-4 py-3">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+      <header className="bg-white border-b border-stone-200 px-3 sm:px-4 py-2 sm:py-3">
+        <div className="max-w-6xl xl:max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="px-2 sm:px-3"
+            >
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
+              <span className="hidden sm:inline">Back</span>
             </Button>
-            <h1 className="text-xl font-bold text-stone-800">Checkout</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-stone-800">
+              Checkout
+            </h1>
           </div>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="max-w-6xl xl:max-w-7xl mx-auto p-3 sm:p-4 lg:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Delivery Form */}
           <div>
             <Card>
@@ -223,13 +230,13 @@ export default function CheckoutPage() {
                     <Button
                       type="submit"
                       disabled={isPending}
-                      className="w-full bg-orange-600 hover:bg-orange-700 h-12 text-lg"
+                      className="w-full bg-orange-600 hover:bg-orange-700 h-11 sm:h-12 text-base sm:text-lg"
                     >
                       {isPending ? (
                         "Placing Order..."
                       ) : (
                         <>
-                          <CreditCard className="mr-2 h-5 w-5" />
+                          <CreditCard className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                           Place Order - ₹{total.toFixed(2)}
                         </>
                       )}
@@ -241,13 +248,15 @@ export default function CheckoutPage() {
           </div>
 
           {/* Order Summary */}
-          <div>
+          <div className="order-first lg:order-last">
             <Card>
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg">
+                  Order Summary
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[300px] pr-4">
+                <ScrollArea className="h-[200px] sm:h-[300px] pr-4">
                   <div className="space-y-3">
                     {items.map((item) => (
                       <div
