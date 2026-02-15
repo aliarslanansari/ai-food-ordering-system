@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import { Send, Loader2 } from "lucide-react";
 
 interface ChatInputProps {
@@ -25,7 +25,7 @@ export function ChatInput({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <form onSubmit={handleSubmit} className="flex w-full gap-2">
       <Input
         value={message}
         onChange={(e) => setMessage(e.target.value)}
@@ -33,11 +33,7 @@ export function ChatInput({
         disabled={isLoading}
         className="flex-1"
       />
-      <Button
-        type="submit"
-        disabled={!message.trim() || isLoading}
-        className="bg-orange-600 hover:bg-orange-700"
-      >
+      <Button type="submit" disabled={!message.trim() || isLoading}>
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (

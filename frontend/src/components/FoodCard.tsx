@@ -1,175 +1,131 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, Flame, Dumbbell, Wheat } from "lucide-react";
+import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { Plus, Minus, ShoppingCart } from "lucide-react";
 import { useState } from "react";
-import type { Food } from "@/types";
+import type { Food } from "../types";
 
 interface FoodCardProps {
   food: Food;
   onAddToCart: (food: Food, quantity: number) => void;
-  compact?: boolean;
 }
 
-export function FoodCard({
-  food,
-  onAddToCart,
-  compact = false,
-}: FoodCardProps) {
+export function FoodCard({ food, onAddToCart }: FoodCardProps) {
   const [quantity, setQuantity] = useState(1);
 
   const handleAdd = () => {
-    onAddToCart(food, quantity);
-    setQuantity(1);
+    if (typeof onAddToCart === "function") {
+      onAddToCart(food, quantity);
+      setQuantity(1);
+    }
   };
 
-  if (compact) {
-    return (
-      <Card className="overflow-hidden hover:shadow-md transition-shadow">
-        <div className="flex">
-          <div className="w-24 h-24 bg-stone-200 flex-shrink-0">
-            {food.imageUrl ? (
-              <img
-                src={food.imageUrl}
-                alt={food.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-stone-400">
-                <span className="text-xs">No image</span>
-              </div>
-            )}
-          </div>
-          <div className="flex-1 p-3">
-            <h3 className="font-semibold text-sm line-clamp-1">{food.name}</h3>
-            <p className="text-xs text-muted-foreground line-clamp-1">
-              {food.category}
-            </p>
-            <div className="flex items-center justify-between mt-2">
-              <span className="font-bold text-orange-600">₹{food.price}</span>
-              <Button
-                size="sm"
-                className="h-7 px-2"
-                onClick={() => onAddToCart(food, 1)}
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="aspect-video bg-stone-200 relative">
+    <Card className="overflow-hidden transition-all duration-200 hover:shadow-xl hover:-translate-y-1 flex flex-col h-full">
+      {/* Image Container */}
+      <div className="relative h-40 overflow-hidden bg-slate-100">
         {food.imageUrl ? (
           <img
             src={food.imageUrl}
             alt={food.name}
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src =
+                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180'%3E%3Crect fill='%23f1f5f9' width='320' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='48' fill='%2394a3b8'%3E🍛%3C/text%3E%3C/svg%3E";
+            }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-stone-400">
-            <span>No image available</span>
+          <div className="flex h-full w-full items-center justify-center text-6xl">
+            🍛
           </div>
         )}
         <Badge
-          className={`absolute top-2 right-2 ${
+          className={`absolute right-2 top-2 text-xs font-medium ${
             food.isVegetarian
-              ? "bg-green-100 text-green-800 hover:bg-green-100"
-              : "bg-red-100 text-red-800 hover:bg-red-100"
+              ? "bg-green-600 hover:bg-green-700"
+              : "bg-red-600 hover:bg-red-700"
           }`}
         >
           {food.isVegetarian ? "Veg" : "Non-Veg"}
         </Badge>
       </div>
 
+      {/* Content */}
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-lg">{food.name}</CardTitle>
-            <CardDescription className="text-sm">
-              {food.category}
-            </CardDescription>
-          </div>
-          <span className="text-xl font-bold text-orange-600">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-base font-bold text-slate-900 leading-tight">
+            {food.name}
+          </h3>
+          <span className="text-base font-bold text-blue-600 whitespace-nowrap">
             ₹{food.price}
           </span>
         </div>
+        <p className="text-xs text-slate-500">{food.category}</p>
       </CardHeader>
 
-      <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground line-clamp-2">
+      <CardContent className="flex-1 space-y-3">
+        <p className="line-clamp-2 text-sm text-slate-600 leading-relaxed">
           {food.description}
         </p>
 
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary" className="text-xs">
-            <Flame className="h-3 w-3 mr-1" />
+        <div className="flex flex-wrap gap-1.5">
+          <Badge
+            variant="secondary"
+            className="text-xs font-normal bg-slate-100 text-slate-600"
+          >
             {food.nutrition.calories} cal
           </Badge>
-          <Badge variant="secondary" className="text-xs">
-            <Dumbbell className="h-3 w-3 mr-1" />
+          <Badge
+            variant="secondary"
+            className="text-xs font-normal bg-slate-100 text-slate-600"
+          >
             {food.nutrition.protein}g protein
           </Badge>
-          <Badge variant="secondary" className="text-xs">
-            <Wheat className="h-3 w-3 mr-1" />
+          <Badge
+            variant="secondary"
+            className="text-xs font-normal bg-slate-100 text-slate-600"
+          >
             {food.nutrition.carbs}g carbs
           </Badge>
         </div>
-
-        <div className="flex flex-wrap gap-1">
-          {food.ingredients.slice(0, 4).map((ingredient, idx) => (
-            <span
-              key={idx}
-              className="text-xs bg-stone-100 text-stone-600 px-2 py-1 rounded"
-            >
-              {ingredient}
-            </span>
-          ))}
-          {food.ingredients.length > 4 && (
-            <span className="text-xs text-muted-foreground">
-              +{food.ingredients.length - 4} more
-            </span>
-          )}
-        </div>
       </CardContent>
 
-      <CardFooter className="flex items-center justify-between pt-2">
-        <div className="flex items-center gap-2">
+      {/* Footer with Add to Cart */}
+      <CardFooter className="pt-2 border-t border-slate-100">
+        <div className="flex items-center justify-between w-full gap-3">
+          {/* Quantity Controls */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-full border-slate-200 hover:bg-slate-100"
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            >
+              <Minus className="h-3 w-3" />
+            </Button>
+            <span className="w-8 text-center text-sm font-semibold text-slate-700">
+              {quantity}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-full border-slate-200 hover:bg-slate-100"
+              onClick={() => setQuantity(quantity + 1)}
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          </div>
+
+          {/* Add Button */}
           <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            onClick={handleAdd}
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 flex items-center gap-1.5 shadow-sm hover:shadow transition-all"
           >
-            <Minus className="h-4 w-4" />
-          </Button>
-          <span className="w-8 text-center font-medium">{quantity}</span>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setQuantity(quantity + 1)}
-          >
-            <Plus className="h-4 w-4" />
+            <ShoppingCart className="h-4 w-4" />
+            Add
           </Button>
         </div>
-        <Button
-          onClick={handleAdd}
-          className="bg-orange-600 hover:bg-orange-700"
-        >
-          Add to Cart
-        </Button>
       </CardFooter>
     </Card>
   );

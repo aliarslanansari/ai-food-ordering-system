@@ -1,20 +1,15 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
+import { Button } from "./ui/button";
+import { ScrollArea } from "./ui/scroll-area";
 import { ShoppingCart, Plus, Minus, Trash2 } from "lucide-react";
-import type { CartItem } from "@/types";
+import type { CartItem } from "../types";
 
 interface CartSidebarProps {
   items: CartItem[];
   total: number;
   itemCount: number;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
   onUpdateQuantity: (itemId: string, quantity: number) => void;
   onRemoveItem: (itemId: string) => void;
   onClearCart: () => void;
@@ -25,51 +20,43 @@ export function CartSidebar({
   items,
   total,
   itemCount,
+  isOpen,
+  onOpenChange,
   onUpdateQuantity,
   onRemoveItem,
   onClearCart,
   onCheckout,
 }: CartSidebarProps) {
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="outline" className="relative">
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          Cart
-          {itemCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {itemCount}
-            </span>
-          )}
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-md">
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+      <SheetContent className="flex w-full flex-col sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5" />
-            Your Cart ({itemCount} items)
-          </SheetTitle>
+          <SheetTitle>Cart ({itemCount} items)</SheetTitle>
         </SheetHeader>
 
         {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[60vh] text-muted-foreground">
-            <ShoppingCart className="h-12 w-12 mb-4 opacity-50" />
-            <p>Your cart is empty</p>
-            <p className="text-sm">Add items from the chat to get started</p>
+          <div className="flex flex-1 flex-col items-center justify-center text-slate-500">
+            <ShoppingCart className="mb-4 h-16 w-16 opacity-20" />
+            <p className="text-sm">Your cart is empty</p>
           </div>
         ) : (
           <>
-            <ScrollArea className="h-[calc(100vh-250px)] mt-4">
-              <div className="space-y-4 pr-4">
+            <ScrollArea className="flex-1 pr-4">
+              <div className="space-y-4">
                 {items.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3">
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-4 rounded-lg border p-3"
+                  >
                     <div className="flex-1">
-                      <p className="font-medium">{item.foodName}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="font-medium text-slate-900">
+                        {item.foodName}
+                      </p>
+                      <p className="text-sm text-slate-600">
                         ₹{item.price} each
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"
                         size="icon"
@@ -100,7 +87,7 @@ export function CartSidebar({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-red-500"
+                      className="h-7 w-7 text-red-600"
                       onClick={() => onRemoveItem(item.id)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -110,11 +97,10 @@ export function CartSidebar({
               </div>
             </ScrollArea>
 
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t">
-              <Separator className="mb-4" />
-              <div className="flex justify-between mb-4">
-                <span className="font-semibold">Total</span>
-                <span className="font-bold text-lg">₹{total.toFixed(2)}</span>
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex justify-between text-lg font-semibold">
+                <span>Total</span>
+                <span className="text-blue-600">₹{total.toFixed(2)}</span>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -124,10 +110,7 @@ export function CartSidebar({
                 >
                   Clear
                 </Button>
-                <Button
-                  onClick={onCheckout}
-                  className="flex-[2] bg-orange-600 hover:bg-orange-700"
-                >
+                <Button onClick={onCheckout} className="flex-[2]">
                   Checkout
                 </Button>
               </div>
