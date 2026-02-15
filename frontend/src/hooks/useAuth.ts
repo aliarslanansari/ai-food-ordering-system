@@ -30,7 +30,7 @@ export function useLogin() {
     mutationFn: login,
     onSuccess: (data) => {
       setAuth(data.user, data.token);
-      queryClient.setQueryData(["user"], data.user);
+      queryClient.setQueryData(["user"], { user: data.user });
       toast.success("Welcome back!");
     },
     onError: (error: AxiosError<{ error: string }>) => {
@@ -47,7 +47,7 @@ export function useSignup() {
     mutationFn: signup,
     onSuccess: (data) => {
       setAuth(data.user, data.token);
-      queryClient.setQueryData(["user"], data.user);
+      queryClient.setQueryData(["user"], { user: data.user });
       toast.success("Account created successfully!");
     },
     onError: (error: AxiosError<{ error: string }>) => {

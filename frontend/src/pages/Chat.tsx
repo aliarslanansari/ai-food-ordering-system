@@ -1,20 +1,20 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChatHeader } from "@/components/ChatHeader";
-import { ChatMessage, TypingIndicator } from "@/components/ChatMessage";
-import { ChatInput } from "@/components/ChatInput";
-import { CartSidebar } from "@/components/CartSidebar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useChatStore } from "@/stores/chat";
-import { useCartStore } from "@/stores/cart";
-import { useChat } from "@/hooks/useChat";
-import { useAuth } from "@/hooks/useAuth";
+import { Header } from "../components/Header";
+import { ChatMessage, TypingIndicator } from "../components/ChatMessage";
+import { ChatInput } from "../components/ChatInput";
+import { CartSidebar } from "../components/CartSidebar";
+import { ScrollArea } from "../components/ui/scroll-area";
+import { Button } from "../components/ui/button";
+import { useChatStore } from "../stores/chat";
+import { useCartStore } from "../stores/cart";
+import { useChat } from "../hooks/useChat";
+import { useAuth } from "../hooks/useAuth";
 
-export default function ChatPage() {
+export default function Chat() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const messages = useChatStore((state) => state.messages);
   const isLoading = useChatStore((state) => state.isLoading);
@@ -23,17 +23,17 @@ export default function ChatPage() {
   const cartItems = useCartStore((state) => state.items);
   const cartTotal = useCartStore((state) => state.total);
   const itemCount = useCartStore((state) => state.itemCount);
+  const isCartOpen = useCartStore((state) => state.isOpen);
+  const toggleCart = useCartStore((state) => state.toggleCart);
+  const closeCart = useCartStore((state) => state.closeCart);
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const clearCart = useCartStore((state) => state.clearCart);
 
   const { mutate: sendMessage, isPending } = useChat();
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
   const handleSendMessage = (content: string) => {
@@ -51,107 +51,82 @@ export default function ChatPage() {
     navigate("/checkout");
   };
 
-  return (
-    <div className="flex flex-col h-screen bg-stone-50">
-      {/* Header */}
-      <ChatHeader itemCount={itemCount} onCartClick={() => {}} user={user} />
+  const suggestedPrompts = [
+    "Show me vegetarian curries",
+    "High protein dishes",
+    "Tandoori recommendations",
+    "Budget meals under ₹500",
+  ];
 
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Messages */}
-          <ScrollArea ref={scrollAreaRef} className="flex-1 p-3 sm:p-4 lg:p-6">
-            <div className="space-y-4 max-w-3xl xl:max-w-4xl 2xl:max-w-5xl mx-auto">
+  return (
+    <div className="flex h-screen flex-col bg-slate-50">
+      <Header cartCount={itemCount} user={user} onCartClick={toggleCart} />
+
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 flex-col">
+          <ScrollArea className="flex-1">
+            <div className="container-responsive py-6">
               {messages.length === 0 ? (
-                <div className="text-center py-8 sm:py-12 lg:py-16">
-                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-stone-800 mb-2 sm:mb-3">
-                    Welcome to SpiceRoute! 🍛
-                  </h2>
-                  <p className="text-stone-600 mb-4 sm:mb-6 text-sm sm:text-base">
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-600 text-4xl text-white shadow-lg">
+                    🍛
+                  </div>
+                  <h1 className="mb-2 text-3xl font-bold text-slate-900">
+                    Welcome to SpiceRoute
+                  </h1>
+                  <p className="mb-8 text-slate-600">
                     Your AI-powered Indian food ordering assistant
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-md mx-auto px-2 sm:px-0">
-                    <button
-                      onClick={() =>
-                        handleSendMessage(
-                          "Show me some spicy vegetarian curries",
-                        )
-                      }
-                      className="p-2.5 sm:p-3 text-left bg-white rounded-lg border border-stone-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
-                    >
-                      <span className="text-xs sm:text-sm text-stone-700 line-clamp-2">
-                        "Show me some spicy vegetarian curries"
-                      </span>
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleSendMessage("I want something high protein")
-                      }
-                      className="p-2.5 sm:p-3 text-left bg-white rounded-lg border border-stone-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
-                    >
-                      <span className="text-xs sm:text-sm text-stone-700 line-clamp-2">
-                        "I want something high protein"
-                      </span>
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleSendMessage("Recommend tandoori dishes")
-                      }
-                      className="p-2.5 sm:p-3 text-left bg-white rounded-lg border border-stone-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
-                    >
-                      <span className="text-xs sm:text-sm text-stone-700 line-clamp-2">
-                        "Recommend tandoori dishes"
-                      </span>
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleSendMessage("What's good for under ₹500?")
-                      }
-                      className="p-2.5 sm:p-3 text-left bg-white rounded-lg border border-stone-200 hover:border-orange-300 hover:bg-orange-50 transition-colors"
-                    >
-                      <span className="text-xs sm:text-sm text-stone-700 line-clamp-2">
-                        "What's good for under ₹500?"
-                      </span>
-                    </button>
+                  <div className="grid w-full max-w-2xl gap-3 sm:grid-cols-2">
+                    {suggestedPrompts.map((prompt) => (
+                      <Button
+                        key={prompt}
+                        variant="outline"
+                        className="h-auto whitespace-normal p-4 text-left"
+                        onClick={() => handleSendMessage(prompt)}
+                      >
+                        {prompt}
+                      </Button>
+                    ))}
                   </div>
                 </div>
               ) : (
-                <>
+                <div className="mx-auto max-w-3xl space-y-4">
                   {messages.map((message) => (
                     <ChatMessage
                       key={message.id}
                       message={message}
                       onAddToCart={(food, quantity) => {
-                        // Handle add to cart from food cards
                         console.log("Add to cart:", food, quantity);
                       }}
                     />
                   ))}
                   {isLoading && <TypingIndicator />}
-                </>
+                  <div ref={messagesEndRef} />
+                </div>
               )}
-              <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
 
-          {/* Input */}
-          <div className="p-3 sm:p-4 lg:p-6 border-t border-stone-200 bg-white">
-            <div className="max-w-3xl xl:max-w-4xl 2xl:max-w-5xl mx-auto">
-              <ChatInput
-                onSend={handleSendMessage}
-                isLoading={isPending}
-                placeholder="Ask for recommendations, add items to cart, or checkout..."
-              />
+          <div className="border-t bg-white p-4">
+            <div className="container-responsive">
+              <div className="mx-auto max-w-3xl">
+                <ChatInput
+                  onSend={handleSendMessage}
+                  isLoading={isPending}
+                  placeholder="Ask for recommendations, add items to cart..."
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Cart Sidebar */}
         <CartSidebar
           items={cartItems}
           total={cartTotal}
           itemCount={itemCount}
+          isOpen={isCartOpen}
+          onOpenChange={closeCart}
           onUpdateQuantity={updateQuantity}
           onRemoveItem={removeItem}
           onClearCart={clearCart}

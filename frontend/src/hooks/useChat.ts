@@ -58,7 +58,7 @@ export function useChat() {
         content: data.message,
         intent: data.intent,
         foods: data.results,
-        cartSummary: data.cart,
+        cartSummary: data.cartSummary,
         timestamp: Date.now(),
       });
     },

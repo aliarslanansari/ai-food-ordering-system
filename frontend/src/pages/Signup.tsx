@@ -1,17 +1,17 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useSignup } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useSignup } from "../hooks/useAuth";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+} from "../components/ui/card";
+import { Label } from "../components/ui/label";
 import { Loader2 } from "lucide-react";
 
 const signupSchema = Yup.object({
@@ -21,7 +21,9 @@ const signupSchema = Yup.object({
   email: Yup.string()
     .email("Invalid email address")
     .required("Email is required"),
-  phone: Yup.string().optional(),
+  phone: Yup.string()
+    .matches(/^[0-9]{10}$/, "Phone number must be 10 digits")
+    .optional(),
   password: Yup.string()
     .min(6, "Password must be at least 6 characters")
     .required("Password is required"),
@@ -46,47 +48,36 @@ export default function Signup() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-50 p-3 sm:p-4">
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader className="text-center pb-4 sm:pb-6">
-          <div className="mx-auto w-12 h-12 sm:w-14 sm:h-14 bg-orange-100 rounded-full flex items-center justify-center mb-3 sm:mb-4">
-            <span className="text-xl sm:text-2xl">🍛</span>
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600">
+            <span className="text-3xl font-bold text-white">S</span>
           </div>
-          <CardTitle className="text-xl sm:text-2xl">Create Account</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            Sign up to start ordering
+          <CardTitle className="text-2xl">Create an account</CardTitle>
+          <CardDescription>
+            Enter your details to get started
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            onSubmit={formik.handleSubmit}
-            className="space-y-3 sm:space-y-4"
-          >
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="name" className="text-sm">
-                Full Name
-              </Label>
+          <form onSubmit={formik.handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
               <Input
                 id="name"
                 name="name"
-                type="text"
                 placeholder="John Doe"
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.name}
-                className="h-10 sm:h-11"
               />
               {formik.touched.name && formik.errors.name && (
-                <p className="text-xs sm:text-sm text-red-500">
-                  {formik.errors.name}
-                </p>
+                <p className="text-sm text-red-600">{formik.errors.name}</p>
               )}
             </div>
 
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="email" className="text-sm">
-                Email
-              </Label>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 name="email"
@@ -95,35 +86,29 @@ export default function Signup() {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.email}
-                className="h-10 sm:h-11"
               />
               {formik.touched.email && formik.errors.email && (
-                <p className="text-xs sm:text-sm text-red-500">
-                  {formik.errors.email}
-                </p>
+                <p className="text-sm text-red-600">{formik.errors.email}</p>
               )}
             </div>
 
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="phone" className="text-sm">
-                Phone (optional)
-              </Label>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone (optional)</Label>
               <Input
                 id="phone"
                 name="phone"
-                type="tel"
                 placeholder="+91 98765 43210"
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.phone}
-                className="h-10 sm:h-11"
               />
+              {formik.touched.phone && formik.errors.phone && (
+                <p className="text-sm text-red-600">{formik.errors.phone}</p>
+              )}
             </div>
 
-            <div className="space-y-1.5 sm:space-y-2">
-              <Label htmlFor="password" className="text-sm">
-                Password
-              </Label>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 name="password"
@@ -132,10 +117,9 @@ export default function Signup() {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.password}
-                className="h-10 sm:h-11"
               />
               {formik.touched.password && formik.errors.password && (
-                <p className="text-xs sm:text-sm text-red-500">
+                <p className="text-sm text-red-600">
                   {formik.errors.password}
                 </p>
               )}
@@ -143,7 +127,7 @@ export default function Signup() {
 
             <Button
               type="submit"
-              className="w-full h-10 sm:h-11 mt-2"
+              className="w-full"
               disabled={signupMutation.isPending || !formik.isValid}
             >
               {signupMutation.isPending ? (
@@ -152,20 +136,17 @@ export default function Signup() {
                   Creating account...
                 </>
               ) : (
-                "Sign Up"
+                "Sign up"
               )}
             </Button>
           </form>
 
-          <p className="mt-4 text-center text-xs sm:text-sm text-muted-foreground">
+          <div className="mt-4 text-center text-sm">
             Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-orange-600 hover:underline font-medium"
-            >
+            <Link to="/login" className="font-medium text-blue-600 hover:underline">
               Sign in
             </Link>
-          </p>
+          </div>
         </CardContent>
       </Card>
     </div>

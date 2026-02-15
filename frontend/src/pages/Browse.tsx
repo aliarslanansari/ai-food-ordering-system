@@ -1,41 +1,26 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { Header } from "../components/Header";
+import { FoodCard } from "../components/FoodCard";
+import { CartSidebar } from "../components/CartSidebar";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Skeleton } from "../components/ui/skeleton";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Search, ArrowLeft, ShoppingCart, Leaf, Flame } from "lucide-react";
-import { FoodCard } from "@/components/FoodCard";
-import { CartSidebar } from "@/components/CartSidebar";
-import { useCartStore } from "@/stores/cart";
-import { useChatStore } from "@/stores/chat";
-import { useAddToCart } from "@/hooks/useChat";
-import { useAuth } from "@/hooks/useAuth";
-import foods from "../../../backend/src/data/foods.json";
-
-const CATEGORIES = [
-  "All",
-  "Appetizers",
-  "Main Course",
-  "Breads",
-  "Rice & Biryani",
-  "Desserts",
-  "Beverages",
-];
-
-const TYPE_FILTERS = [
-  { value: "all", label: "All Types" },
-  { value: "veg", label: "Vegetarian", icon: Leaf },
-  { value: "non-veg", label: "Non-Vegetarian", icon: Flame },
-];
+} from "../components/ui/select";
+import { Search } from "lucide-react";
+import { useCartStore } from "../stores/cart";
+import { useChatStore } from "../stores/chat";
+import { useAddToCart } from "../hooks/useChat";
+import { useAuth } from "../hooks/useAuth";
+import { useFoods } from "../hooks/useFoods";
+import type { Food } from "../types";
 
 const SORT_OPTIONS = [
   { value: "default", label: "Default" },
@@ -44,23 +29,7 @@ const SORT_OPTIONS = [
   { value: "calories", label: "Calories: Low to High" },
 ];
 
-// Transform food data from JSON to Food type
-const transformFood = (food: (typeof foods)[0]): import("@/types").Food => ({
-  id: food.id,
-  name: food.name,
-  description: food.description,
-  category: food.category,
-  type: food.type as "Vegetarian" | "Non-Vegetarian",
-  spiceLevel: food.spiceLevel,
-  ingredients: food.ingredients,
-  nutrition: food.nutrition,
-  price: food.price,
-  serves: food.serves,
-  imageUrl: food.image_url,
-  isVegetarian: food.type === "Vegetarian",
-});
-
-export default function BrowsePage() {
+export default function Browse() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,10 +37,15 @@ export default function BrowsePage() {
   const [selectedType, setSelectedType] = useState("all");
   const [sortBy, setSortBy] = useState("default");
 
+  const { data: foods = [], isLoading, error } = useFoods();
+
   const sessionId = useChatStore((state) => state.sessionId);
   const cartItems = useCartStore((state) => state.items);
   const cartTotal = useCartStore((state) => state.total);
   const itemCount = useCartStore((state) => state.itemCount);
+  const isCartOpen = useCartStore((state) => state.isOpen);
+  const toggleCart = useCartStore((state) => state.toggleCart);
+  const closeCart = useCartStore((state) => state.closeCart);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
   const clearCart = useCartStore((state) => state.clearCart);
@@ -79,22 +53,25 @@ export default function BrowsePage() {
 
   const addToCartMutation = useAddToCart();
 
-  // Filter and sort foods
+  // Generate categories dynamically from foods data
+  const categories = useMemo(() => {
+    const uniqueCategories = new Set(foods.map((food) => food.category));
+    return ["All", ...Array.from(uniqueCategories).sort()];
+  }, [foods]);
+
   const filteredFoods = useMemo(() => {
     let result = [...foods];
 
-    // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (food) =>
           food.name.toLowerCase().includes(query) ||
           food.description.toLowerCase().includes(query) ||
-          food.ingredients.some((i) => i.toLowerCase().includes(query)),
+          food.ingredients.some((i: string) => i.toLowerCase().includes(query)),
       );
     }
 
-    // Category filter
     if (selectedCategory !== "All") {
       result = result.filter(
         (food) =>
@@ -102,14 +79,12 @@ export default function BrowsePage() {
       );
     }
 
-    // Type filter
     if (selectedType === "veg") {
-      result = result.filter((food) => food.type === "Vegetarian");
+      result = result.filter((food) => food.isVegetarian);
     } else if (selectedType === "non-veg") {
-      result = result.filter((food) => food.type === "Non-Vegetarian");
+      result = result.filter((food) => !food.isVegetarian);
     }
 
-    // Sort
     switch (sortBy) {
       case "price-low":
         result.sort((a, b) => a.price - b.price);
@@ -123,14 +98,10 @@ export default function BrowsePage() {
     }
 
     return result;
-  }, [searchQuery, selectedCategory, selectedType, sortBy]);
+  }, [foods, searchQuery, selectedCategory, selectedType, sortBy]);
 
-  const handleAddToCart = async (
-    food: import("@/types").Food,
-    quantity: number,
-  ) => {
+  const handleAddToCart = async (food: Food, quantity: number) => {
     if (!sessionId) {
-      // Add to local cart store only
       addCartItem({
         id: `local_${Date.now()}`,
         foodId: food.id,
@@ -140,14 +111,7 @@ export default function BrowsePage() {
         addedAt: Date.now(),
       });
     } else {
-      // Add via API - find original food data
-      const originalFood = foods.find((f) => f.id === food.id);
-      if (originalFood) {
-        await addToCartMutation(
-          originalFood as unknown as import("@/types").Food,
-          quantity,
-        );
-      }
+      await addToCartMutation(food, quantity);
     }
   };
 
@@ -159,185 +123,176 @@ export default function BrowsePage() {
     navigate("/checkout");
   };
 
+  if (error) {
+    return (
+      <div className="flex min-h-screen flex-col bg-slate-50">
+        <Header cartCount={itemCount} user={user} onCartClick={toggleCart} />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-center">
+            <p className="mb-2 text-lg font-medium text-slate-900">
+              Failed to load foods
+            </p>
+            <p className="text-sm text-slate-600">Please try again later</p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-stone-50">
-      {/* Header */}
-      <header className="bg-white border-b border-stone-200 sticky top-0 z-10">
-        <div className="max-w-7xl xl:max-w-8xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6 py-2 sm:py-3">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-            {/* Left: Back & Logo */}
-            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <Header cartCount={itemCount} user={user} onCartClick={toggleCart} />
+
+      <div className="sticky top-16 z-40 border-b bg-white/95 backdrop-blur">
+        <div className="container-responsive py-4">
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                placeholder="Search foods, ingredients..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+                disabled={isLoading}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Select
+                value={selectedType}
+                onValueChange={setSelectedType}
+                disabled={isLoading}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="veg">Vegetarian</SelectItem>
+                  <SelectItem value="non-veg">Non-Vegetarian</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={sortBy}
+                onValueChange={setSortBy}
+                disabled={isLoading}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {categories.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(category)}
+                className="flex-shrink-0"
+                disabled={isLoading}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <main className="flex-1">
+        <div className="container-responsive py-6">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm text-slate-600">
+              {isLoading ? (
+                <Skeleton className="h-4 w-32" />
+              ) : (
+                <>
+                  Showing <strong>{filteredFoods.length}</strong> items
+                  {selectedCategory !== "All" && (
+                    <>
+                      {" "}
+                      in{" "}
+                      <Badge variant="secondary" className="text-xs">
+                        {selectedCategory}
+                      </Badge>
+                    </>
+                  )}
+                </>
+              )}
+            </p>
+            {(searchQuery ||
+              selectedCategory !== "All" ||
+              selectedType !== "all") && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate("/")}
-                className="px-2 sm:px-3"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("All");
+                  setSelectedType("all");
+                  setSortBy("default");
+                }}
+                disabled={isLoading}
               >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Back</span>
+                Clear filters
               </Button>
-              <h1 className="text-lg sm:text-xl font-bold text-stone-800">
-                Browse Menu
-              </h1>
-            </div>
-
-            {/* Center: Search */}
-            <div className="flex-1 w-full sm:max-w-md order-3 sm:order-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
-                <Input
-                  placeholder="Search foods, ingredients..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-9 sm:h-10"
-                />
-              </div>
-            </div>
-
-            {/* Right: Cart */}
-            <div className="order-2 sm:order-3">
-              <Button variant="outline" size="sm" className="relative">
-                <ShoppingCart className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Cart</span>
-                {itemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {itemCount}
-                  </span>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters Bar */}
-        <div className="border-t border-stone-200 bg-stone-50/50">
-          <div className="max-w-7xl xl:max-w-8xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6 py-2 sm:py-3">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-3">
-              {/* Category Pills */}
-              <ScrollArea className="flex-1 whitespace-nowrap w-full">
-                <div className="flex gap-2 pb-1">
-                  {CATEGORIES.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors flex-shrink-0 ${
-                        selectedCategory === category
-                          ? "bg-orange-600 text-white"
-                          : "bg-white text-stone-700 border border-stone-200 hover:border-orange-300"
-                      }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </ScrollArea>
-
-              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                <Separator
-                  orientation="vertical"
-                  className="h-6 hidden sm:block"
-                />
-
-                {/* Type Filter */}
-                <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger className="w-[120px] sm:w-[140px] h-8 sm:h-9 text-xs sm:text-sm">
-                    <SelectValue placeholder="Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TYPE_FILTERS.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        <div className="flex items-center gap-2">
-                          {type.icon && <type.icon className="h-4 w-4" />}
-                          {type.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Sort */}
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[130px] sm:w-[160px] h-8 sm:h-9 text-xs sm:text-sm">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SORT_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl xl:max-w-8xl 2xl:max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
-        {/* Results Count */}
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-stone-600 text-sm sm:text-base">
-            Showing <strong>{filteredFoods.length}</strong> items
-            {selectedCategory !== "All" && (
-              <span>
-                {" "}
-                in{" "}
-                <Badge variant="secondary" className="text-xs">
-                  {selectedCategory}
-                </Badge>
-              </span>
             )}
-          </p>
-          {(searchQuery ||
-            selectedCategory !== "All" ||
-            selectedType !== "all") && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs h-8"
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedCategory("All");
-                setSelectedType("all");
-                setSortBy("default");
-              }}
-            >
-              Clear filters
-            </Button>
+          </div>
+
+          {isLoading ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton className="h-48 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : filteredFoods.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {filteredFoods.map((food) => (
+                <FoodCard
+                  key={food.id}
+                  food={food}
+                  onAddToCart={handleAddToCart}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="mb-2 text-lg font-medium text-slate-900">
+                No foods found
+              </p>
+              <p className="text-sm text-slate-600">
+                Try adjusting your search or filters
+              </p>
+            </div>
           )}
         </div>
-
-        {/* Food Grid */}
-        {filteredFoods.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
-            {filteredFoods.map((food) => (
-              <FoodCard
-                key={food.id}
-                food={transformFood(food)}
-                onAddToCart={handleAddToCart}
-                compact
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 sm:py-12">
-            <p className="text-stone-500 text-base sm:text-lg mb-2">
-              No foods found
-            </p>
-            <p className="text-stone-400 text-sm">
-              Try adjusting your search or filters
-            </p>
-          </div>
-        )}
       </main>
 
-      {/* Cart Sidebar */}
       <CartSidebar
         items={cartItems}
         total={cartTotal}
         itemCount={itemCount}
+        isOpen={isCartOpen}
+        onOpenChange={closeCart}
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeItem}
         onClearCart={clearCart}

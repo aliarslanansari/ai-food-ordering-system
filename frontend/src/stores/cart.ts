@@ -6,12 +6,16 @@ interface CartState {
   total: number;
   itemCount: number;
   sessionId: string | null;
+  isOpen: boolean;
   setCart: (cart: CartWithItems) => void;
   addItem: (item: CartItem) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
   setSessionId: (sessionId: string) => void;
+  openCart: () => void;
+  closeCart: () => void;
+  toggleCart: () => void;
 }
 
 export const useCartStore = create<CartState>((set) => ({
@@ -19,6 +23,7 @@ export const useCartStore = create<CartState>((set) => ({
   total: 0,
   itemCount: 0,
   sessionId: null,
+  isOpen: false,
   setCart: (cart) =>
     set({
       items: cart.items,
@@ -86,4 +91,7 @@ export const useCartStore = create<CartState>((set) => ({
       itemCount: 0,
     }),
   setSessionId: (sessionId) => set({ sessionId }),
+  openCart: () => set({ isOpen: true }),
+  closeCart: () => set({ isOpen: false }),
+  toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
 }));
