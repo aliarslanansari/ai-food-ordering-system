@@ -41,33 +41,33 @@ export interface Food {
   };
   price: number;
   serves: number;
-  imageUrl: string;
+  image_url: string;
   isVegetarian: boolean;
 }
 
 // Cart Types
 export interface CartItem {
   id: string;
-  foodId: string;
-  foodName: string;
+  food_id: string;
+  food_name: string;
   quantity: number;
   price: number;
-  addedAt: number;
+  added_at: number;
 }
 
 export interface Cart {
   id: string;
-  sessionId: string;
-  userId?: string;
-  createdAt: number;
-  updatedAt: number;
+  session_id: string;
+  user_id?: string;
+  created_at: number;
+  updated_at: number;
 }
 
 export interface CartWithItems {
   cart: Cart | null;
   items: CartItem[];
   total: number;
-  itemCount: number;
+  item_count: number;
 }
 
 // Chat Types
@@ -86,7 +86,7 @@ export interface ChatMessage {
   content: string;
   intent?: Intent;
   foods?: Food[];
-  cartSummary?: CartWithItems;
+  cartSummary?: CartSummary;
   timestamp: number;
 }
 
@@ -99,26 +99,33 @@ export interface SearchFilters {
   budget?: number;
 }
 
+export interface CartSummary {
+  has_cart: boolean;
+  item_count: number;
+  total: number;
+}
+
 export interface SearchResponse {
-  sessionId: string;
-  isNewSession: boolean;
+  session_id: string;
+  is_new_session: boolean;
   intent: Intent;
   filters?: SearchFilters;
-  filterDescription?: string;
-  semanticQuery?: string;
+  filter_description?: string;
+  semantic_query?: string;
   results: Food[];
   total: number;
-  searchMode: "hybrid" | "semantic" | "keyword" | "no_results";
+  search_mode: "hybrid" | "semantic" | "keyword" | "no_results";
   message: string;
   suggestions?: string[];
-  cartSummary?: CartWithItems;
-  itemsAdded?: CartItem[];
+  cart_summary?: CartSummary;
+  cart?: CartWithItems;
+  items_added?: CartItem[];
   error?: string;
 }
 
 export interface SendMessageInput {
   message: string;
-  sessionId?: string;
+  session_id?: string;
 }
 
 // Order Types
