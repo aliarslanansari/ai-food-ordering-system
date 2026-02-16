@@ -4,15 +4,15 @@ import type { CartItem, CartWithItems } from "@/types";
 interface CartState {
   items: CartItem[];
   total: number;
-  itemCount: number;
-  sessionId: string | null;
+  item_count: number;
+  session_id: string | null;
   isOpen: boolean;
   setCart: (cart: CartWithItems) => void;
   addItem: (item: CartItem) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
-  setSessionId: (sessionId: string) => void;
+  setSessionId: (session_id: string) => void;
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
@@ -21,22 +21,22 @@ interface CartState {
 export const useCartStore = create<CartState>((set) => ({
   items: [],
   total: 0,
-  itemCount: 0,
-  sessionId: null,
+  item_count: 0,
+  session_id: null,
   isOpen: false,
   setCart: (cart) =>
     set({
       items: cart.items,
       total: cart.total,
-      itemCount: cart.itemCount,
+      item_count: cart.item_count,
     }),
   addItem: (item) =>
     set((state) => {
-      const existingItem = state.items.find((i) => i.foodId === item.foodId);
+      const existingItem = state.items.find((i) => i.food_id === item.food_id);
       let newItems;
       if (existingItem) {
         newItems = state.items.map((i) =>
-          i.foodId === item.foodId
+          i.food_id === item.food_id
             ? { ...i, quantity: i.quantity + item.quantity }
             : i,
         );
@@ -51,7 +51,7 @@ export const useCartStore = create<CartState>((set) => ({
       return {
         items: newItems,
         total: newTotal,
-        itemCount: newItemCount,
+        item_count: newItemCount,
       };
     }),
   removeItem: (itemId) =>
@@ -65,7 +65,7 @@ export const useCartStore = create<CartState>((set) => ({
       return {
         items: newItems,
         total: newTotal,
-        itemCount: newItemCount,
+        item_count: newItemCount,
       };
     }),
   updateQuantity: (itemId, quantity) =>
@@ -81,16 +81,16 @@ export const useCartStore = create<CartState>((set) => ({
       return {
         items: newItems,
         total: newTotal,
-        itemCount: newItemCount,
+        item_count: newItemCount,
       };
     }),
   clearCart: () =>
     set({
       items: [],
       total: 0,
-      itemCount: 0,
+      item_count: 0,
     }),
-  setSessionId: (sessionId) => set({ sessionId }),
+  setSessionId: (session_id) => set({ session_id }),
   openCart: () => set({ isOpen: true }),
   closeCart: () => set({ isOpen: false }),
   toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),

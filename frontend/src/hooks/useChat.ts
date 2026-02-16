@@ -33,22 +33,24 @@ export function useChat() {
     onSuccess: (data) => {
       setIsLoading(false);
 
+      console.log("useChat", { data });
+
       // Save session ID
-      if (data.sessionId) {
-        setSessionId(data.sessionId);
+      if (data.session_id) {
+        setSessionId(data.session_id);
       }
 
       // Handle different response types
-      if (data.intent === "add_to_cart" && data.itemsAdded) {
+      if (data.intent === "add_to_cart" && data.items_added) {
         // Update cart with added items
-        data.itemsAdded.forEach((item) => {
+        data.items_added.forEach((item) => {
           addCartItem(item);
         });
-        toast.success(`Added ${data.itemsAdded.length} item(s) to cart`);
+        toast.success(`Added ${data.items_added.length} item(s) to cart`);
       }
 
-      if (data.cartSummary) {
-        setCart(data.cartSummary);
+      if (data.cart) {
+        setCart(data.cart);
       }
 
       // Add assistant message
@@ -58,7 +60,7 @@ export function useChat() {
         content: data.message,
         intent: data.intent,
         foods: data.results,
-        cartSummary: data.cartSummary,
+        cartSummary: data.cart_summary,
         timestamp: Date.now(),
       });
     },
@@ -81,17 +83,17 @@ export function useChat() {
 
 export function useAddToCart() {
   const addCartItem = useCartStore((state) => state.addItem);
-  const sessionId = useChatStore((state) => state.sessionId);
+  const session_id = useChatStore((state) => state.session_id);
 
   return async (food: Food, quantity: number) => {
-    if (!sessionId) {
+    if (!session_id) {
       toast.error("No active session");
       return;
     }
 
     try {
       const response = await api.post("/cart/items", {
-        session_id: sessionId,
+        session_id: session_id,
         food_id: food.id,
         quantity,
       });
@@ -99,11 +101,11 @@ export function useAddToCart() {
       // Update local cart
       addCartItem({
         id: response.data.item.id,
-        foodId: food.id,
-        foodName: food.name,
+        food_id: food.id,
+        food_name: food.name,
         quantity,
         price: food.price,
-        addedAt: Date.now(),
+        added_at: Date.now(),
       });
 
       toast.success(`Added ${food.name} to cart`);
