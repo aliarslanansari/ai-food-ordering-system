@@ -13,7 +13,7 @@ export function cleanJSON(text: string): string {
   // Remove any text before first { or [
   const firstBrace = cleaned.indexOf("{");
   const firstBracket = cleaned.indexOf("[");
-  
+
   let startIndex = -1;
   if (firstBrace !== -1 && firstBracket !== -1) {
     startIndex = Math.min(firstBrace, firstBracket);
@@ -30,7 +30,7 @@ export function cleanJSON(text: string): string {
   // Remove any text after last } or ]
   const lastBrace = cleaned.lastIndexOf("}");
   const lastBracket = cleaned.lastIndexOf("]");
-  
+
   let endIndex = -1;
   if (lastBrace !== -1 && lastBracket !== -1) {
     endIndex = Math.max(lastBrace, lastBracket);
@@ -60,5 +60,43 @@ export function safeJSONParse<T>(text: string, defaultValue: T): T {
   } catch (error) {
     console.error("JSON parse error:", error);
     return defaultValue;
+  }
+}
+
+/**
+ * Build full image URL by prepending CDN URL to the image path
+ * Uses URL API to ensure proper slash handling (no missing or double slashes)
+ * @param imagePath - The relative image path (e.g., "dishes/butter-chicken")
+ * @param cdnUrl - The CDN base URL (e.g., "https://ik.imagekit.io/aliarslanansari/ai-food-ordering-system/")
+ * @returns Full image URL
+ */
+export function buildImageUrl(imagePath: string, cdnUrl: string): string {
+  if (!cdnUrl) {
+    return imagePath;
+  }
+
+  if (!imagePath) {
+    return "";
+  }
+
+  // Use URL API to properly concatenate paths
+  try {
+    const baseUrl = new URL(cdnUrl);
+    // Remove leading slash from imagePath if present to avoid double slashes
+    const cleanPath = imagePath.startsWith("/")
+      ? imagePath.slice(1)
+      : imagePath;
+    // Remove trailing slash from pathname if present
+    const cleanPathname = baseUrl.pathname.endsWith("/")
+      ? baseUrl.pathname.slice(0, -1)
+      : baseUrl.pathname;
+
+    baseUrl.pathname = `${cleanPathname}/${cleanPath}`;
+    return baseUrl.toString();
+  } catch (error) {
+    // Fallback: manual concatenation with slash handling
+    const base = cdnUrl.endsWith("/") ? cdnUrl.slice(0, -1) : cdnUrl;
+    const path = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
+    return `${base}/${path}`;
   }
 }

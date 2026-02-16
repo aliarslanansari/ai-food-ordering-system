@@ -115,6 +115,12 @@ router.get("/", authenticateToken, async (req: Request, res: Response) => {
         status: order.status,
         createdAt: order.createdAt,
         itemCount: order.items.length,
+        items: order.items.map((item) => ({
+          id: item.id,
+          food_name: item.foodName,
+          quantity: item.quantity,
+          price: item.price,
+        })),
       })),
     });
   } catch (error) {

@@ -10,6 +10,60 @@ export class ReferenceResolver {
   constructor(private sessionService: SessionService) {}
 
   /**
+   * Get last mentioned items from context or conversation history
+   */
+  private getLastMentionedItems(sessionId: string): string[] {
+    // First try to get from context
+    const context = this.sessionService.getContext(sessionId);
+    console.log(`[Resolver] Context for ${sessionId}:`, context);
+
+    if (
+      context?.last_mentioned_items &&
+      context.last_mentioned_items.length > 0
+    ) {
+      console.log(
+        `[Resolver] Found ${context.last_mentioned_items.length} items in context`,
+      );
+      return context.last_mentioned_items;
+    }
+
+    // Fallback: check recent assistant messages for results
+    const recentMessages = this.sessionService.getRecentMessages(sessionId, 10);
+    console.log(`[Resolver] Checking ${recentMessages.length} recent messages`);
+
+    for (let i = recentMessages.length - 1; i >= 0; i--) {
+      const msg = recentMessages[i];
+      console.log(
+        `[Resolver] Message ${i}: role=${msg.role}, hasResults=${!!msg.results}, resultsLength=${msg.results?.length || 0}`,
+      );
+
+      if (msg.role === "assistant" && msg.results && msg.results.length > 0) {
+        console.log(
+          `[Resolver] Assistant message results:`,
+          JSON.stringify(msg.results).substring(0, 200),
+        );
+
+        // Extract food IDs from message results
+        const itemIds = msg.results
+          .filter((r: any) => r.id)
+          .map((r: any) => r.id);
+
+        console.log(`[Resolver] Extracted itemIds:`, itemIds);
+
+        if (itemIds.length > 0) {
+          console.log(
+            `[Resolver] ✅ Found ${itemIds.length} items in message history`,
+          );
+          return itemIds;
+        }
+      }
+    }
+
+    console.log(`[Resolver] ❌ No items found in context or history`);
+    return [];
+  }
+
+  /**
    * Resolve item reference from user message
    * @param itemReference - The reference string (e.g., "that", "the first one", "both")
    * @param sessionId - Session ID to get context
@@ -23,14 +77,11 @@ export class ReferenceResolver {
       return { items: [], confidence: 0, reason: "No reference provided" };
     }
 
-    // Get session context
-    const context = this.sessionService.getContext(sessionId);
-    console.log({ context });
-    if (
-      !context ||
-      !context.last_mentioned_items ||
-      context.last_mentioned_items.length === 0
-    ) {
+    // Get last mentioned items from context or history
+    const lastItems = this.getLastMentionedItems(sessionId);
+    console.log({ lastItems, itemReference, sessionId });
+
+    if (lastItems.length === 0) {
       return {
         items: [],
         confidence: 0,
@@ -38,7 +89,6 @@ export class ReferenceResolver {
       };
     }
 
-    const lastItems = context.last_mentioned_items;
     const allFoods = getFoods();
 
     // Normalize reference
