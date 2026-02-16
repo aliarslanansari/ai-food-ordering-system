@@ -10,6 +10,8 @@ export const EMBEDDING_MODEL =
 
 export const INTENT_MODEL = process.env.INTENT_MODEL || "gemini-2.0-flash-exp";
 
+export const IMAGE_CDN_URL = process.env.IMAGE_CDN_URL || "";
+
 if (!GEMINI_API_KEY) {
   throw new Error("GEMINI_API_KEY is missing in environment variables");
 }

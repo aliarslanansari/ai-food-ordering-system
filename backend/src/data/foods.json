@@ -26,7 +26,7 @@
     "price": 379,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/butter-chicken"
+    "image_url": "dishes/butter-chicken.png"
   },
   {
     "id": "dal-makhani",
@@ -54,7 +54,7 @@
     "price": 279,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/dal-makhani"
+    "image_url": "dishes/dal-makhani.png"
   },
   {
     "id": "paneer-tikka",
@@ -81,7 +81,7 @@
     "price": 319,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/paneer-tikka"
+    "image_url": "dishes/paneer-tikka.png"
   },
   {
     "id": "palak-paneer",
@@ -109,7 +109,7 @@
     "price": 329,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/palak-paneer"
+    "image_url": "dishes/palak-paneer.png"
   },
   {
     "id": "chicken-biryani",
@@ -137,7 +137,7 @@
     "price": 429,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/chicken-biryani"
+    "image_url": "dishes/chicken-biryani.png"
   },
   {
     "id": "tandoori-chicken",
@@ -163,7 +163,7 @@
     "price": 399,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/tandoori-chicken"
+    "image_url": "dishes/tandoori-chicken.png"
   },
   {
     "id": "rogan-josh",
@@ -190,7 +190,7 @@
     "price": 459,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/rogan-josh"
+    "image_url": "dishes/rogan-josh.png"
   },
   {
     "id": "chole-bhature",
@@ -216,7 +216,7 @@
     "price": 249,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/chole-bhature"
+    "image_url": "dishes/chole-bhature.png"
   },
   {
     "id": "aloo-paratha",
@@ -243,7 +243,7 @@
     "price": 149,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/aloo-paratha"
+    "image_url": "dishes/aloo-paratha.png"
   },
   {
     "id": "naan",
@@ -268,7 +268,7 @@
     "price": 49,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/naan"
+    "image_url": "dishes/naan.png"
   },
   {
     "id": "kadai-chicken",
@@ -294,7 +294,7 @@
     "price": 389,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/kadai-chicken"
+    "image_url": "dishes/kadai-chicken.png"
   },
   {
     "id": "rajma-chawal",
@@ -321,7 +321,7 @@
     "price": 199,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/rajma-chawal"
+    "image_url": "dishes/rajma-chawal.png"
   },
   {
     "id": "pani-puri",
@@ -340,7 +340,7 @@
     "price": 0,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/pani-puri"
+    "image_url": "dishes/pani-puri.png"
   },
   {
     "id": "pav-bhaji",
@@ -365,7 +365,7 @@
     "price": 179,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/pav-bhaji"
+    "image_url": "dishes/pav-bhaji.png"
   },
   {
     "id": "samosa",
@@ -391,7 +391,7 @@
     "price": 79,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/samosa"
+    "image_url": "dishes/samosa.png"
   },
   {
     "id": "jalebi",
@@ -415,7 +415,7 @@
     "price": 129,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/jalebi"
+    "image_url": "dishes/jalebi.png"
   },
   {
     "id": "gulab-jamun",
@@ -440,7 +440,7 @@
     "price": 99,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/gulab-jamun"
+    "image_url": "dishes/gulab-jamun.png"
   },
   {
     "id": "lassi",
@@ -464,7 +464,7 @@
     "price": 79,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/lassi"
+    "image_url": "dishes/lassi.png"
   },
   {
     "id": "dosa",
@@ -488,7 +488,7 @@
     "price": 149,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/dosa"
+    "image_url": "dishes/dosa.png"
   },
   {
     "id": "idli",
@@ -510,7 +510,7 @@
     "price": 99,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/idli"
+    "image_url": "dishes/idli.png"
   },
   {
     "id": "sambar",
@@ -535,7 +535,7 @@
     "price": 79,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/sambar"
+    "image_url": "dishes/sambar.png"
   },
   {
     "id": "uttapam",
@@ -561,7 +561,7 @@
     "price": 169,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/uttapam"
+    "image_url": "dishes/uttapam.png"
   },
   {
     "id": "medu-vada",
@@ -586,7 +586,7 @@
     "price": 89,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/medu-vada"
+    "image_url": "dishes/medu-vada.png"
   },
   {
     "id": "pongal",
@@ -613,7 +613,7 @@
     "price": 149,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/pongal"
+    "image_url": "dishes/pongal.png"
   },
   {
     "id": "bisi-bele-bath",
@@ -638,7 +638,7 @@
     "price": 229,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/bisi-bele-bath"
+    "image_url": "dishes/bisi-bele-bath.png"
   },
   {
     "id": "kerala-fish-curry",
@@ -663,7 +663,7 @@
     "price": 429,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/kerala-fish-curry"
+    "image_url": "dishes/kerala-fish-curry.png"
   },
   {
     "id": "filter-coffee",
@@ -687,7 +687,7 @@
     "price": 79,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/filter-coffee"
+    "image_url": "dishes/filter-coffee.png"
   },
   {
     "id": "appam",
@@ -710,7 +710,7 @@
     "price": 149,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/appam"
+    "image_url": "dishes/appam.png"
   },
   {
     "id": "upma",
@@ -734,7 +734,7 @@
     "price": 99,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/upma"
+    "image_url": "dishes/upma.png"
   },
   {
     "id": "chicken-65",
@@ -759,7 +759,7 @@
     "price": 319,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/chicken-65"
+    "image_url": "dishes/chicken-65.png"
   },
   {
     "id": "chicken-mughlai",
@@ -786,7 +786,7 @@
     "price": 449,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/chicken-mughlai"
+    "image_url": "dishes/chicken-mughlai.png"
   },
   {
     "id": "mutton-korma",
@@ -813,7 +813,7 @@
     "price": 479,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/mutton-korma"
+    "image_url": "dishes/mutton-korma.png"
   },
   {
     "id": "nihari",
@@ -838,7 +838,7 @@
     "price": 499,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/nihari"
+    "image_url": "dishes/nihari.png"
   },
   {
     "id": "haleem",
@@ -864,7 +864,7 @@
     "price": 429,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/haleem"
+    "image_url": "dishes/haleem.png"
   },
   {
     "id": "shawarma",
@@ -890,7 +890,7 @@
     "price": 249,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/shawarma"
+    "image_url": "dishes/shawarma.png"
   },
   {
     "id": "falafel",
@@ -915,7 +915,7 @@
     "price": 229,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/falafel"
+    "image_url": "dishes/falafel.png"
   },
   {
     "id": "hummus",
@@ -940,7 +940,7 @@
     "price": 179,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/hummus"
+    "image_url": "dishes/hummus.png"
   },
   {
     "id": "chicken-mandi",
@@ -964,7 +964,7 @@
     "price": 449,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/chicken-mandi"
+    "image_url": "dishes/chicken-mandi.png"
   },
   {
     "id": "baklava",
@@ -988,7 +988,7 @@
     "price": 199,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/baklava"
+    "image_url": "dishes/baklava.png"
   },
   {
     "id": "grilled-chicken-breast",
@@ -1013,7 +1013,7 @@
     "price": 399,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/grilled-chicken-breast"
+    "image_url": "dishes/grilled-chicken-breast.png"
   },
   {
     "id": "fish-and-chips",
@@ -1037,7 +1037,7 @@
     "price": 429,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/fish-and-chips"
+    "image_url": "dishes/fish-and-chips.png"
   },
   {
     "id": "beef-steak",
@@ -1062,7 +1062,7 @@
     "price": 599,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/beef-steak"
+    "image_url": "dishes/beef-steak.png"
   },
   {
     "id": "grilled-fish",
@@ -1086,7 +1086,7 @@
     "price": 449,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/grilled-fish"
+    "image_url": "dishes/grilled-fish.png"
   },
   {
     "id": "french-fries",
@@ -1109,7 +1109,7 @@
     "price": 149,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/french-fries"
+    "image_url": "dishes/french-fries.png"
   },
   {
     "id": "caesar-salad",
@@ -1128,7 +1128,7 @@
     "price": 0,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/caesar-salad"
+    "image_url": "dishes/caesar-salad.png"
   },
   {
     "id": "malai-kofta",
@@ -1154,7 +1154,7 @@
     "price": 359,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/malai-kofta"
+    "image_url": "dishes/malai-kofta.png"
   },
   {
     "id": "paneer-butter-masala",
@@ -1181,7 +1181,7 @@
     "price": 349,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/paneer-butter-masala"
+    "image_url": "dishes/paneer-butter-masala.png"
   },
   {
     "id": "dal-tadka",
@@ -1207,7 +1207,7 @@
     "price": 179,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/dal-tadka"
+    "image_url": "dishes/dal-tadka.png"
   },
   {
     "id": "kadai-paneer",
@@ -1233,7 +1233,7 @@
     "price": 329,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/kadai-paneer"
+    "image_url": "dishes/kadai-paneer.png"
   },
   {
     "id": "matar-paneer",
@@ -1259,7 +1259,7 @@
     "price": 299,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/matar-paneer"
+    "image_url": "dishes/matar-paneer.png"
   },
   {
     "id": "baingan-bharta",
@@ -1285,7 +1285,7 @@
     "price": 229,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/baingan-bharta"
+    "image_url": "dishes/baingan-bharta.png"
   },
   {
     "id": "aloo-gobi",
@@ -1311,7 +1311,7 @@
     "price": 199,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/aloo-gobi"
+    "image_url": "dishes/aloo-gobi.png"
   },
   {
     "id": "bhindi-masala",
@@ -1335,7 +1335,7 @@
     "price": 229,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/bhindi-masala"
+    "image_url": "dishes/bhindi-masala.png"
   },
   {
     "id": "mixed-veg-curry",
@@ -1360,7 +1360,7 @@
     "price": 229,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/mixed-veg-curry"
+    "image_url": "dishes/mixed-veg-curry.png"
   },
   {
     "id": "paneer-bhurji",
@@ -1385,7 +1385,7 @@
     "price": 259,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/paneer-bhurji"
+    "image_url": "dishes/paneer-bhurji.png"
   },
   {
     "id": "chicken-tikka-masala",
@@ -1410,7 +1410,7 @@
     "price": 399,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/chicken-tikka-masala"
+    "image_url": "dishes/chicken-tikka-masala.png"
   },
   {
     "id": "mutton-curry",
@@ -1434,7 +1434,7 @@
     "price": 429,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/mutton-curry"
+    "image_url": "dishes/mutton-curry.png"
   },
   {
     "id": "egg-curry",
@@ -1458,7 +1458,7 @@
     "price": 199,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/egg-curry"
+    "image_url": "dishes/egg-curry.png"
   },
   {
     "id": "fish-fry",
@@ -1483,7 +1483,7 @@
     "price": 399,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/fish-fry"
+    "image_url": "dishes/fish-fry.png"
   },
   {
     "id": "prawn-curry",
@@ -1507,7 +1507,7 @@
     "price": 499,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/prawn-curry"
+    "image_url": "dishes/prawn-curry.png"
   },
   {
     "id": "chicken-do-pyaza",
@@ -1532,7 +1532,7 @@
     "price": 379,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/chicken-do-pyaza"
+    "image_url": "dishes/chicken-do-pyaza.png"
   },
   {
     "id": "veg-biryani",
@@ -1556,7 +1556,7 @@
     "price": 299,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/veg-biryani"
+    "image_url": "dishes/veg-biryani.png"
   },
   {
     "id": "jeera-rice",
@@ -1579,7 +1579,7 @@
     "price": 129,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/jeera-rice"
+    "image_url": "dishes/jeera-rice.png"
   },
   {
     "id": "garlic-naan",
@@ -1603,7 +1603,7 @@
     "price": 69,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/garlic-naan"
+    "image_url": "dishes/garlic-naan.png"
   },
   {
     "id": "roti",
@@ -1626,7 +1626,7 @@
     "price": 29,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/roti"
+    "image_url": "dishes/roti.png"
   },
   {
     "id": "bhel-puri",
@@ -1650,7 +1650,7 @@
     "price": 129,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/bhel-puri"
+    "image_url": "dishes/bhel-puri.png"
   },
   {
     "id": "dahi-puri",
@@ -1675,7 +1675,7 @@
     "price": 119,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/dahi-puri"
+    "image_url": "dishes/dahi-puri.png"
   },
   {
     "id": "vada-pav",
@@ -1699,7 +1699,7 @@
     "price": 79,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/vada-pav"
+    "image_url": "dishes/vada-pav.png"
   },
   {
     "id": "aloo-tikki",
@@ -1723,7 +1723,7 @@
     "price": 99,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/aloo-tikki"
+    "image_url": "dishes/aloo-tikki.png"
   },
   {
     "id": "chole-kulche",
@@ -1747,7 +1747,7 @@
     "price": 199,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/chole-kulche"
+    "image_url": "dishes/chole-kulche.png"
   },
   {
     "id": "papdi-chaat",
@@ -1773,7 +1773,7 @@
     "price": 149,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/papdi-chaat"
+    "image_url": "dishes/papdi-chaat.png"
   },
   {
     "id": "sev-puri",
@@ -1799,7 +1799,7 @@
     "price": 129,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/sev-puri"
+    "image_url": "dishes/sev-puri.png"
   },
   {
     "id": "ragda-pattice",
@@ -1824,7 +1824,7 @@
     "price": 149,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/ragda-pattice"
+    "image_url": "dishes/ragda-pattice.png"
   },
   {
     "id": "paneer-tikka-roll",
@@ -1848,7 +1848,7 @@
     "price": 199,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/paneer-tikka-roll"
+    "image_url": "dishes/paneer-tikka-roll.png"
   },
   {
     "id": "chicken-kathi-roll",
@@ -1873,7 +1873,7 @@
     "price": 249,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/chicken-kathi-roll"
+    "image_url": "dishes/chicken-kathi-roll.png"
   },
   {
     "id": "egg-roll",
@@ -1897,7 +1897,7 @@
     "price": 129,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/egg-roll"
+    "image_url": "dishes/egg-roll.png"
   },
   {
     "id": "dhokla",
@@ -1922,7 +1922,7 @@
     "price": 129,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/dhokla"
+    "image_url": "dishes/dhokla.png"
   },
   {
     "id": "khandvi",
@@ -1947,7 +1947,7 @@
     "price": 119,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/khandvi"
+    "image_url": "dishes/khandvi.png"
   },
   {
     "id": "thepla",
@@ -1971,7 +1971,7 @@
     "price": 89,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/thepla"
+    "image_url": "dishes/thepla.png"
   },
   {
     "id": "tomato-soup",
@@ -1995,7 +1995,7 @@
     "price": 119,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/tomato-soup"
+    "image_url": "dishes/tomato-soup.png"
   },
   {
     "id": "mushroom-soup",
@@ -2019,7 +2019,7 @@
     "price": 139,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/mushroom-soup"
+    "image_url": "dishes/mushroom-soup.png"
   },
   {
     "id": "chicken-soup",
@@ -2043,7 +2043,7 @@
     "price": 149,
     "serves": 1,
     "isVegetarian": false,
-    "image_url": "dishes/chicken-soup"
+    "image_url": "dishes/chicken-soup.png"
   },
   {
     "id": "sweet-corn-soup",
@@ -2067,7 +2067,7 @@
     "price": 119,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/sweet-corn-soup"
+    "image_url": "dishes/sweet-corn-soup.png"
   },
   {
     "id": "raita",
@@ -2091,7 +2091,7 @@
     "price": 59,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/raita"
+    "image_url": "dishes/raita.png"
   },
   {
     "id": "green-salad",
@@ -2116,7 +2116,7 @@
     "price": 149,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/green-salad"
+    "image_url": "dishes/green-salad.png"
   },
   {
     "id": "papad",
@@ -2139,7 +2139,7 @@
     "price": 39,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/papad"
+    "image_url": "dishes/papad.png"
   },
   {
     "id": "kheer",
@@ -2165,7 +2165,7 @@
     "price": 149,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/kheer"
+    "image_url": "dishes/kheer.png"
   },
   {
     "id": "ras-malai",
@@ -2190,7 +2190,7 @@
     "price": 179,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/ras-malai"
+    "image_url": "dishes/ras-malai.png"
   },
   {
     "id": "gajar-ka-halwa",
@@ -2216,7 +2216,7 @@
     "price": 169,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/gajar-ka-halwa"
+    "image_url": "dishes/gajar-ka-halwa.png"
   },
   {
     "id": "kulfi",
@@ -2239,7 +2239,7 @@
     "price": 129,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/kulfi"
+    "image_url": "dishes/kulfi.png"
   },
   {
     "id": "rasgulla",
@@ -2261,7 +2261,7 @@
     "price": 99,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/rasgulla"
+    "image_url": "dishes/rasgulla.png"
   },
   {
     "id": "kaju-katli",
@@ -2284,7 +2284,7 @@
     "price": 299,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/kaju-katli"
+    "image_url": "dishes/kaju-katli.png"
   },
   {
     "id": "besan-ladoo",
@@ -2308,7 +2308,7 @@
     "price": 149,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/besan-ladoo"
+    "image_url": "dishes/besan-ladoo.png"
   },
   {
     "id": "falooda",
@@ -2333,7 +2333,7 @@
     "price": 179,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/falooda"
+    "image_url": "dishes/falooda.png"
   },
   {
     "id": "brownie-with-ice-cream",
@@ -2358,7 +2358,7 @@
     "price": 199,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/brownie-with-ice-cream"
+    "image_url": "dishes/brownie-with-ice-cream.png"
   },
   {
     "id": "cheesecake",
@@ -2382,7 +2382,7 @@
     "price": 249,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/cheesecake"
+    "image_url": "dishes/cheesecake.png"
   },
   {
     "id": "ice-cream-sundae",
@@ -2406,7 +2406,7 @@
     "price": 179,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/ice-cream-sundae"
+    "image_url": "dishes/ice-cream-sundae.png"
   },
   {
     "id": "masala-chai",
@@ -2432,7 +2432,7 @@
     "price": 49,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/masala-chai"
+    "image_url": "dishes/masala-chai.png"
   },
   {
     "id": "fresh-lime-soda",
@@ -2457,7 +2457,7 @@
     "price": 49,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/fresh-lime-soda"
+    "image_url": "dishes/fresh-lime-soda.png"
   },
   {
     "id": "mango-lassi",
@@ -2482,6 +2482,6 @@
     "price": 99,
     "serves": 1,
     "isVegetarian": true,
-    "image_url": "dishes/mango-lassi"
+    "image_url": "dishes/mango-lassi.png"
   }
 ]
