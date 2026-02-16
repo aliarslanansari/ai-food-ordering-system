@@ -1,5 +1,10 @@
 import { Header } from "../components/Header";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { useOrders } from "../hooks/useOrders";
@@ -40,9 +45,7 @@ export default function OrderHistory() {
                     </div>
                     <Badge
                       variant={
-                        order.status === "delivered"
-                          ? "default"
-                          : "secondary"
+                        order.status === "delivered" ? "default" : "secondary"
                       }
                       className="capitalize"
                     >
@@ -55,25 +58,26 @@ export default function OrderHistory() {
                     <div>
                       <h4 className="mb-2 font-medium">Items</h4>
                       <ScrollArea className="max-h-40">
-                        {order.items.map((item: any) => (
-                          <div
-                            key={item.id}
-                            className="flex justify-between border-b py-2 text-sm last:border-0"
-                          >
-                            <span>
-                              {item.food_name} × {item.quantity}
-                            </span>
-                            <span>
-                              ₹{(item.price * item.quantity).toFixed(2)}
-                            </span>
-                          </div>
-                        ))}
+                        {!!order?.items?.length &&
+                          order.items.map((item: any) => (
+                            <div
+                              key={item.id}
+                              className="flex justify-between border-b py-2 text-sm last:border-0"
+                            >
+                              <span>
+                                {item.food_name} × {item.quantity}
+                              </span>
+                              <span>
+                                ₹{(item.price * item.quantity).toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
                       </ScrollArea>
                     </div>
                     <div className="flex justify-between border-t pt-2 font-semibold">
                       <span>Total</span>
                       <span className="text-blue-600">
-                        ₹{order.total_amount.toFixed(2)}
+                        ₹{(order?.total_amount || 0).toFixed(2)}
                       </span>
                     </div>
                     <div className="text-sm text-slate-600">

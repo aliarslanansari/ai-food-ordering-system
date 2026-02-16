@@ -2,7 +2,12 @@ import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Header } from "../components/Header";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { CheckCircle2 } from "lucide-react";
 import { useOrder } from "../hooks/useOrders";
 import { useAuth } from "../hooks/useAuth";
@@ -64,10 +69,11 @@ export default function OrderConfirmation() {
           <CardContent className="space-y-6">
             <div className="space-y-2 text-center">
               <p className="text-lg font-semibold">
-                Total: ₹{data.order.total_amount.toFixed(2)}
+                Total: ₹{data.order.total.toFixed(2)}
               </p>
               <p className="text-sm text-slate-600">
-                Status: <strong className="capitalize">{data.order.status}</strong>
+                Status:{" "}
+                <strong className="capitalize">{data.order.status}</strong>
               </p>
               <p className="text-sm text-slate-600">
                 Delivery to: {data.order.address}

@@ -4,11 +4,10 @@ import { Header } from "../components/Header";
 import { ChatMessage, TypingIndicator } from "../components/ChatMessage";
 import { ChatInput } from "../components/ChatInput";
 import { CartSidebar } from "../components/CartSidebar";
-import { ScrollArea } from "../components/ui/scroll-area";
 import { Button } from "../components/ui/button";
 import { useChatStore } from "../stores/chat";
 import { useCartStore } from "../stores/cart";
-import { useChat } from "../hooks/useChat";
+import { useChat, useAddToCart } from "../hooks/useChat";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Chat() {
@@ -18,11 +17,11 @@ export default function Chat() {
 
   const messages = useChatStore((state) => state.messages);
   const isLoading = useChatStore((state) => state.isLoading);
-  const sessionId = useChatStore((state) => state.sessionId);
+  const session_id = useChatStore((state) => state.session_id);
 
   const cartItems = useCartStore((state) => state.items);
   const cartTotal = useCartStore((state) => state.total);
-  const itemCount = useCartStore((state) => state.itemCount);
+  const itemCount = useCartStore((state) => state.item_count);
   const isCartOpen = useCartStore((state) => state.isOpen);
   const toggleCart = useCartStore((state) => state.toggleCart);
   const closeCart = useCartStore((state) => state.closeCart);
@@ -31,6 +30,7 @@ export default function Chat() {
   const clearCart = useCartStore((state) => state.clearCart);
 
   const { mutate: sendMessage, isPending } = useChat();
+  const addToCart = useAddToCart();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -39,7 +39,7 @@ export default function Chat() {
   const handleSendMessage = (content: string) => {
     sendMessage({
       message: content,
-      sessionId: sessionId || undefined,
+      session_id: session_id || undefined,
     });
   };
 
@@ -52,7 +52,7 @@ export default function Chat() {
   };
 
   const suggestedPrompts = [
-    "Show me vegetarian curries",
+    "Show me some spicy appetizers under ₹300",
     "High protein dishes",
     "Tandoori recommendations",
     "Budget meals under ₹500",
@@ -63,8 +63,8 @@ export default function Chat() {
       <Header cartCount={itemCount} user={user} onCartClick={toggleCart} />
 
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex flex-1 flex-col">
-          <ScrollArea className="flex-1">
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto">
             <div className="container-responsive py-6">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -91,14 +91,12 @@ export default function Chat() {
                   </div>
                 </div>
               ) : (
-                <div className="mx-auto max-w-3xl space-y-4">
+                <div className="mx-auto max-w-3xl space-y-4 pb-4">
                   {messages.map((message) => (
                     <ChatMessage
                       key={message.id}
                       message={message}
-                      onAddToCart={(food, quantity) => {
-                        console.log("Add to cart:", food, quantity);
-                      }}
+                      onAddToCart={addToCart}
                     />
                   ))}
                   {isLoading && <TypingIndicator />}
@@ -106,7 +104,7 @@ export default function Chat() {
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
 
           <div className="border-t bg-white p-4">
             <div className="container-responsive">

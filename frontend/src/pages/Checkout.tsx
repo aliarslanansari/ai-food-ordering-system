@@ -4,7 +4,12 @@ import * as Yup from "yup";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { Separator } from "../components/ui/separator";
 import { Header } from "../components/Header";
@@ -33,7 +38,7 @@ export default function Checkout() {
   const items = useCartStore((state) => state.items);
   const total = useCartStore((state) => state.total);
   const clearCart = useCartStore((state) => state.clearCart);
-  const sessionId = useChatStore((state) => state.sessionId);
+  const session_id = useChatStore((state) => state.session_id);
   const { mutate: createOrder, isPending } = useCreateOrder();
 
   const formik = useFormik({
@@ -47,7 +52,7 @@ export default function Checkout() {
     onSubmit: (values) => {
       createOrder(
         {
-          session_id: sessionId || undefined,
+          session_id: session_id || undefined,
           customer_name: values.customerName,
           phone: values.phone,
           address: values.address,
@@ -58,7 +63,7 @@ export default function Checkout() {
             clearCart();
             navigate(`/order-confirmation/${data.order.id}`);
           },
-        }
+        },
       );
     },
   });
@@ -92,11 +97,7 @@ export default function Checkout() {
       <Header user={user} />
 
       <div className="container-responsive flex-1 py-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="mb-4"
-        >
+        <Button variant="ghost" onClick={() => navigate("/")} className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
@@ -175,11 +176,7 @@ export default function Checkout() {
                   />
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={isPending}
-                  className="w-full"
-                >
+                <Button type="submit" disabled={isPending} className="w-full">
                   {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -206,7 +203,7 @@ export default function Checkout() {
                       className="flex justify-between border-b pb-3 last:border-0"
                     >
                       <div>
-                        <p className="font-medium">{item.foodName}</p>
+                        <p className="font-medium">{item.food_name}</p>
                         <p className="text-sm text-slate-600">
                           ₹{item.price} × {item.quantity}
                         </p>

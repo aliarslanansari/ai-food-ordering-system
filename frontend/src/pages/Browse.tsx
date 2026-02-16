@@ -39,10 +39,10 @@ export default function Browse() {
 
   const { data: foods = [], isLoading, error } = useFoods();
 
-  const sessionId = useChatStore((state) => state.sessionId);
+  const session_id = useChatStore((state) => state.session_id);
   const cartItems = useCartStore((state) => state.items);
   const cartTotal = useCartStore((state) => state.total);
-  const itemCount = useCartStore((state) => state.itemCount);
+  const itemCount = useCartStore((state) => state.item_count);
   const isCartOpen = useCartStore((state) => state.isOpen);
   const toggleCart = useCartStore((state) => state.toggleCart);
   const closeCart = useCartStore((state) => state.closeCart);
@@ -101,14 +101,14 @@ export default function Browse() {
   }, [foods, searchQuery, selectedCategory, selectedType, sortBy]);
 
   const handleAddToCart = async (food: Food, quantity: number) => {
-    if (!sessionId) {
+    if (!session_id) {
       addCartItem({
         id: `local_${Date.now()}`,
-        foodId: food.id,
-        foodName: food.name,
+        food_id: food.id,
+        food_name: food.name,
         quantity,
         price: food.price,
-        addedAt: Date.now(),
+        added_at: Date.now(),
       });
     } else {
       await addToCartMutation(food, quantity);
