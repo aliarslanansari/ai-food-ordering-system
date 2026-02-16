@@ -29,6 +29,7 @@ export const useCartStore = create<CartState>((set) => ({
       items: cart.items,
       total: cart.total,
       item_count: cart.item_count,
+      session_id: cart.cart?.session_id || null,
     }),
   addItem: (item) =>
     set((state) => {

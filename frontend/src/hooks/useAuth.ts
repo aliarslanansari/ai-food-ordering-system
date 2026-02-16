@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { api } from "@/api";
 import { useAuthStore } from "@/stores/auth";
+import { useCartStore } from "@/stores/cart";
+import { useChatStore } from "@/stores/chat";
 import type { User, LoginInput, SignupInput, AuthResponse } from "@/types";
 import { toast } from "sonner";
 
@@ -25,11 +27,18 @@ const getMe = async (): Promise<{ user: User }> => {
 export function useLogin() {
   const queryClient = useQueryClient();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const setCart = useCartStore((state) => state.setCart);
+  const session_id = useChatStore((state) => state.session_id);
 
   return useMutation({
-    mutationFn: login,
+    mutationFn: (data: Omit<LoginInput, "session_id">) =>
+      login({ ...data, session_id: session_id || undefined }),
     onSuccess: (data) => {
       setAuth(data.user, data.token);
+      // Update cart if merged cart is returned
+      if (data.cart) {
+        setCart(data.cart);
+      }
       queryClient.setQueryData(["user"], { user: data.user });
       toast.success("Welcome back!");
     },
@@ -42,11 +51,18 @@ export function useLogin() {
 export function useSignup() {
   const queryClient = useQueryClient();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const setCart = useCartStore((state) => state.setCart);
+  const session_id = useChatStore((state) => state.session_id);
 
   return useMutation({
-    mutationFn: signup,
+    mutationFn: (data: Omit<SignupInput, "session_id">) =>
+      signup({ ...data, session_id: session_id || undefined }),
     onSuccess: (data) => {
       setAuth(data.user, data.token);
+      // Update cart if merged cart is returned
+      if (data.cart) {
+        setCart(data.cart);
+      }
       queryClient.setQueryData(["user"], { user: data.user });
       toast.success("Account created successfully!");
     },

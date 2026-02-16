@@ -104,7 +104,7 @@ router.post("/", optionalAuth, async (req, res) => {
           }
 
           // Get updated cart
-          const cartWithItems = cartService.getCartWithItems(cart.id);
+          const cartWithItems = cartService.getCartWithItems(sessionId, userId);
 
           const response = {
             session_id: sessionId,
@@ -302,7 +302,7 @@ router.post("/", optionalAuth, async (req, res) => {
 
     // Get cart with user context and summary
     const cart = cartService.getOrCreateCart(sessionId, userId);
-    const cartWithItems = cartService.getCartWithItems(cart.id);
+    const cartWithItems = cartService.getCartWithItems(sessionId, userId);
     const cartSummary = cartWithItems
       ? {
           has_cart: true,

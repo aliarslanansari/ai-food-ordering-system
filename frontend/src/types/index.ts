@@ -10,11 +10,13 @@ export interface User {
 export interface AuthResponse {
   user: User;
   token: string;
+  cart?: CartWithItems;
 }
 
 export interface LoginInput {
   email: string;
   password: string;
+  session_id?: string;
 }
 
 export interface SignupInput {
@@ -22,6 +24,7 @@ export interface SignupInput {
   email: string;
   phone?: string;
   password: string;
+  session_id?: string;
 }
 
 // Food Types
@@ -103,6 +106,7 @@ export interface CartSummary {
   has_cart: boolean;
   item_count: number;
   total: number;
+  items?: CartItem[];
 }
 
 export interface SearchResponse {

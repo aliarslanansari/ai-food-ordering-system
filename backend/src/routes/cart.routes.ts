@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { DatabaseService } from "../services/database.service.js";
 import { getFoods } from "../services/data.service.js";
-import { CartService } from "../services/cart.service.js";
+import { CartService, type CartWithItems } from "../services/cart.service.js";
 import { optionalAuth } from "../middleware/auth.middleware.js";
 
 const router = Router();
@@ -17,18 +17,50 @@ const cartService = new CartService(db);
 router.get("/", optionalAuth, async (req, res) => {
   try {
     const { session_id } = req.query;
+    const userId = req.user?.id;
 
-    if (!session_id || typeof session_id !== "string") {
-      return res.status(400).json({ error: "session_id required" });
+    // Require either session_id or authenticated user
+    if ((!session_id || typeof session_id !== "string") && !userId) {
+      return res
+        .status(400)
+        .json({ error: "session_id or authentication required" });
     }
 
-    // Get or create cart with user context if available
-    const cart = cartService.getOrCreateCart(session_id, req.user?.id);
-    const cartWithItems = cartService.getCartWithItems(cart.id);
+    let cartWithItems: CartWithItems | null = null;
 
-    if (!cartWithItems || cartWithItems.items.length === 0) {
+    if (session_id && typeof session_id === "string") {
+      // Get cart by session_id (with user context if available)
+      cartWithItems = cartService.getCartWithItems(session_id, userId);
+    } else if (userId) {
+      // Get cart by user_id only (no session_id provided)
+      const cart = cartService.getCartByUser(userId);
+      if (cart) {
+        const items = cartService.getCartItems(cart.id);
+        const total = items.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
+        );
+        const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+        cartWithItems = { cart, items, total, item_count: itemCount };
+      }
+    }
+
+    // If no cart found, return empty cart response
+    if (!cartWithItems) {
+      // Create a minimal empty cart response
+      const emptyCart =
+        session_id && typeof session_id === "string"
+          ? cartService.getOrCreateCart(session_id, userId)
+          : null;
+
       return res.json({
-        cart: cart,
+        cart: emptyCart || {
+          id: "",
+          session_id: session_id || "",
+          user_id: userId,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+        },
         items: [],
         total: 0,
         item_count: 0,
@@ -91,7 +123,10 @@ router.post("/items", optionalAuth, async (req, res) => {
     });
 
     // Get updated cart
-    const cartWithItems = cartService.getCartWithItems(cart.id);
+    const cartWithItems = cartService.getCartWithItems(
+      session_id,
+      req.user?.id!,
+    );
 
     res.json({
       message: `Added ${food.name} x${quantity} to cart`,
@@ -202,7 +237,7 @@ router.get("/summary", async (req, res) => {
       return res.status(400).json({ error: "session_id required" });
     }
 
-    const summary = cartService.getCartSummary(session_id);
+    const summary = cartService.getCartSummary(session_id, req.user?.id!);
 
     res.json(summary);
   } catch (error) {

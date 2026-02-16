@@ -15,7 +15,7 @@ const authService = new AuthService(db);
  */
 router.post("/register", async (req, res) => {
   try {
-    const { email, password, name, phone } = req.body;
+    const { email, password, name, phone, session_id } = req.body;
 
     // Validate input
     if (!email || !password || !name) {
@@ -35,6 +35,7 @@ router.post("/register", async (req, res) => {
       password,
       name,
       phone,
+      session_id,
     });
 
     res.status(201).json(result);
@@ -52,7 +53,7 @@ router.post("/register", async (req, res) => {
  */
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, session_id } = req.body;
 
     // Validate input
     if (!email || !password) {
@@ -61,7 +62,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const result = await authService.login({ email, password });
+    const result = await authService.login({ email, password, session_id });
 
     res.json(result);
   } catch (error) {

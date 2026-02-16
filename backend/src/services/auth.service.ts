@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 import type Database from "better-sqlite3";
 import { JWT_SECRET } from "../config/env.js";
+import { CartService, type CartWithItems } from "./cart.service.js";
 
 // ============================================================
 // Types
@@ -25,21 +26,24 @@ export interface UserResponse {
   created_at: number;
 }
 
+export interface AuthResponse {
+  user: UserResponse;
+  token: string;
+  cart?: CartWithItems;
+}
+
 export interface RegisterInput {
   email: string;
   password: string;
   name: string;
   phone?: string;
+  session_id?: string;
 }
 
 export interface LoginInput {
   email: string;
   password: string;
-}
-
-export interface AuthResponse {
-  user: UserResponse;
-  token: string;
+  session_id?: string;
 }
 
 // ============================================================
@@ -47,7 +51,11 @@ export interface AuthResponse {
 // ============================================================
 
 export class AuthService {
-  constructor(private db: Database.Database) {}
+  private cartService: CartService;
+
+  constructor(private db: Database.Database) {
+    this.cartService = new CartService(db);
+  }
 
   /**
    * Register a new user
@@ -91,9 +99,16 @@ export class AuthService {
     // Generate JWT
     const token = this.generateToken(user);
 
+    // Merge cart if session_id provided
+    let cart: CartWithItems | undefined;
+    if (input.session_id) {
+      cart = this.cartService.mergeCarts(input.session_id, userId) || undefined;
+    }
+
     return {
       user: this.toUserResponse(user),
       token,
+      cart,
     };
   }
 
@@ -120,9 +135,17 @@ export class AuthService {
     // Generate JWT
     const token = this.generateToken(user);
 
+    // Merge cart if session_id provided
+    let cart: CartWithItems | undefined;
+    if (input.session_id) {
+      cart =
+        this.cartService.mergeCarts(input.session_id, user.id) || undefined;
+    }
+
     return {
       user: this.toUserResponse(user),
       token,
+      cart,
     };
   }
 

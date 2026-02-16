@@ -144,6 +144,96 @@ export class CartService {
   }
 
   /**
+   * Merge guest cart items into user cart
+   * Returns the merged cart with items
+   */
+  mergeCarts(sessionId: string, userId: string): CartWithItems | null {
+    // Get guest cart by session
+    const guestCart = this.getCartBySession(sessionId);
+
+    // If no guest cart or guest cart has no items, just return user's cart
+    if (!guestCart) {
+      return this.getCartWithItems(sessionId, userId);
+    }
+
+    // Get guest cart items
+    const guestItems = this.getCartItems(guestCart.id);
+
+    // If guest cart is empty, just return user's cart
+    if (guestItems.length === 0) {
+      return this.getCartWithItems(sessionId, userId);
+    }
+
+    // Get or create user cart
+    let userCart = this.getCartByUser(userId);
+
+    if (!userCart) {
+      // Convert guest cart to user cart by updating user_id
+      const stmt = this.db.prepare(`
+        UPDATE carts SET user_id = ? WHERE id = ?
+      `);
+      stmt.run(userId, guestCart.id);
+
+      // Update session_id to current session
+      const updateSessionStmt = this.db.prepare(`
+        UPDATE carts SET session_id = ? WHERE id = ?
+      `);
+      updateSessionStmt.run(sessionId, guestCart.id);
+
+      console.log(`✅ Guest cart ${guestCart.id} linked to user ${userId}`);
+
+      return this.getCartWithItems(sessionId, userId);
+    }
+
+    // User has an existing cart - merge items
+    const userItems = this.getCartItems(userCart.id);
+
+    // Merge guest items into user cart
+    for (const guestItem of guestItems) {
+      const existingItem = userItems.find(
+        (item) => item.food_id === guestItem.food_id,
+      );
+
+      if (existingItem) {
+        // Update quantity of existing item
+        const newQuantity = existingItem.quantity + guestItem.quantity;
+        this.updateItemQuantity(existingItem.id, newQuantity);
+      } else {
+        // Move item from guest cart to user cart
+        const moveStmt = this.db.prepare(`
+          UPDATE cart_items SET cart_id = ? WHERE id = ?
+        `);
+        moveStmt.run(userCart.id, guestItem.id);
+      }
+    }
+
+    // Delete guest cart (items are either moved or already updated)
+    this.deleteCart(guestCart.id);
+
+    // Update user cart timestamp
+    this.touchCart(userCart.id);
+
+    console.log(
+      `✅ Merged ${guestItems.length} items from guest cart to user ${userId}'s cart`,
+    );
+
+    // Return merged cart
+    const items = this.getCartItems(userCart.id);
+    const total = items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0,
+    );
+    const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+
+    return {
+      cart: userCart,
+      items,
+      total,
+      item_count: itemCount,
+    };
+  }
+
+  /**
    * Get cart by session ID
    */
   getCartBySession(sessionId: string): Cart | null {
@@ -317,8 +407,8 @@ export class CartService {
   /**
    * Get cart with all items and totals
    */
-  getCartWithItems(sessionId: string): CartWithItems | null {
-    const cart = this.getCartBySession(sessionId);
+  getCartWithItems(sessionId: string, userId?: string): CartWithItems | null {
+    const cart = this.getOrCreateCart(sessionId, userId);
 
     if (!cart) {
       return null;
@@ -429,12 +519,15 @@ export class CartService {
   /**
    * Get cart summary
    */
-  getCartSummary(sessionId: string): {
+  getCartSummary(
+    sessionId: string,
+    userId: string,
+  ): {
     has_cart: boolean;
     item_count: number;
     total: number;
   } {
-    const cartWithItems = this.getCartWithItems(sessionId);
+    const cartWithItems = this.getCartWithItems(sessionId, userId);
 
     if (!cartWithItems) {
       return {

@@ -68,7 +68,11 @@ export function ChatMessage({ message, onAddToCart }: ChatMessageProps) {
   }
 
   // Cart summary message
-  if (message.cartSummary && message.cartSummary.items.length > 0) {
+  if (
+    message.cartSummary &&
+    message.cartSummary.items &&
+    message.cartSummary.items.length > 0
+  ) {
     const cart = message.cartSummary;
     return (
       <div className="flex gap-3">
@@ -89,7 +93,7 @@ export function ChatMessage({ message, onAddToCart }: ChatMessageProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {cart.items.map((item) => (
+              {cart.items?.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm">
                   <span>
                     {item.food_name} x{item.quantity}

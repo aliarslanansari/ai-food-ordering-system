@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { ShoppingCart, User, LogOut, History, Menu as MenuIcon } from "lucide-react";
+import { ShoppingCart, LogOut, History } from "lucide-react";
 import type { User as UserType } from "../types";
 
 interface HeaderProps {
