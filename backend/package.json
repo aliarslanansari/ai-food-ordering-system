@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "node --loader ts-node/esm --watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && npm run copy:db",
+    "copy:db": "cp -r src/db dist/",
     "start": "node dist/index.js",
     "generate:embeddings": "node --loader ts-node/esm src/scripts/generate-embeddings.ts"
   },
