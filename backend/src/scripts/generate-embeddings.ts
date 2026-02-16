@@ -1,10 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { GoogleGenAI } from "@google/genai";
-import dotenv from "dotenv";
 import { EMBEDDING_MODEL } from "../config/env.js";
-
-dotenv.config();
 
 const __dirname = path.resolve();
 

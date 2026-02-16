@@ -1,9 +1,6 @@
 import fs from "fs";
 import axios from "axios";
 import ImageKit from "imagekit";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const foods = JSON.parse(fs.readFileSync("./../data/foods.json", "utf-8"));
 
