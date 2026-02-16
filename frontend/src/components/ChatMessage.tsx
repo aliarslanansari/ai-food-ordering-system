@@ -57,7 +57,11 @@ export function ChatMessage({ message, onAddToCart }: ChatMessageProps) {
           <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2 max-w-[90%] sm:max-w-[80%]">
             <p className="text-sm">{message.content}</p>
           </div>
-          <FoodCardGrid foods={message.foods} onAddToCart={onAddToCart} />
+          <FoodCardGrid
+            foods={message.foods}
+            onAddToCart={onAddToCart}
+            columns={2}
+          />
         </div>
       </div>
     );
@@ -88,7 +92,7 @@ export function ChatMessage({ message, onAddToCart }: ChatMessageProps) {
               {cart.items.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm">
                   <span>
-                    {item.foodName} x{item.quantity}
+                    {item.food_name} x{item.quantity}
                   </span>
                   <span className="font-medium">
                     ₹{(item.price * item.quantity).toFixed(2)}

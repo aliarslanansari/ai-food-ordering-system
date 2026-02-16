@@ -6,6 +6,7 @@ interface FoodCardGridProps {
   onAddToCart: (food: Food, quantity: number) => void;
   title?: string;
   subtitle?: string;
+  columns?: 2 | 3 | 4;
 }
 
 export function FoodCardGrid({
@@ -13,10 +14,17 @@ export function FoodCardGrid({
   onAddToCart,
   title,
   subtitle,
+  columns = 4,
 }: FoodCardGridProps) {
   if (foods.length === 0) {
     return null;
   }
+
+  const gridCols = {
+    2: "grid-cols-1 sm:grid-cols-2",
+    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+    4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+  }[columns];
 
   return (
     <div className="space-y-2 sm:space-y-3">
@@ -32,7 +40,7 @@ export function FoodCardGrid({
           )}
         </div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
+      <div className={`grid ${gridCols} gap-2 sm:gap-3`}>
         {foods.map((food) => (
           <FoodCard key={food.id} food={food} onAddToCart={onAddToCart} />
         ))}

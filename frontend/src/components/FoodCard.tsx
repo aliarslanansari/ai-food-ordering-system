@@ -4,6 +4,7 @@ import { Badge } from "./ui/badge";
 import { Plus, Minus, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import type { Food } from "../types";
+import { Image } from "./Image";
 
 interface FoodCardProps {
   food: Food;
@@ -21,24 +22,14 @@ export function FoodCard({ food, onAddToCart }: FoodCardProps) {
   };
 
   return (
-    <Card className="overflow-hidden transition-all duration-200 hover:shadow-xl hover:-translate-y-1 flex flex-col h-full">
+    <Card className="overflow-hidden transition-all duration-200 hover:shadow-xl hover:-translate-y-1 flex flex-col h-full pt-0">
       {/* Image Container */}
       <div className="relative h-40 overflow-hidden bg-slate-100">
-        {food.imageUrl ? (
-          <img
-            src={food.imageUrl}
-            alt={food.name}
-            className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src =
-                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180'%3E%3Crect fill='%23f1f5f9' width='320' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='48' fill='%2394a3b8'%3E🍛%3C/text%3E%3C/svg%3E";
-            }}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-6xl">
-            🍛
-          </div>
-        )}
+        <Image
+          src={food.image_url}
+          alt={food.name}
+          className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+        />
         <Badge
           className={`absolute right-2 top-2 text-xs font-medium ${
             food.isVegetarian

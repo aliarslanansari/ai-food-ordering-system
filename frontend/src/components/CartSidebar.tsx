@@ -17,7 +17,7 @@ interface CartSidebarProps {
 }
 
 export function CartSidebar({
-  items,
+  items = [],
   total,
   itemCount,
   isOpen,
@@ -50,7 +50,7 @@ export function CartSidebar({
                   >
                     <div className="flex-1">
                       <p className="font-medium text-slate-900">
-                        {item.foodName}
+                        {item.food_name}
                       </p>
                       <p className="text-sm text-slate-600">
                         ₹{item.price} each
