@@ -55,13 +55,9 @@ const app = express();
 const PORT = process.env.PORT || 5200;
 
 // CORS configuration
-console.log({ corsOrigins });
 app.use(
   cors({
-    origin: corsOrigins,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: "*",
   }),
 );
 app.use(express.json());
