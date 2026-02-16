@@ -1,8 +1,6 @@
-# SpiceRoute - AI-Powered Food Ordering System
+# AI-Powered Food Ordering System
 
 An intelligent conversational food ordering platform with AI-powered recommendations, built with React, TypeScript, Node.js, and SQLite.
-
-![SpiceRoute Banner](https://via.placeholder.com/800x200/f97316/ffffff?text=SpiceRoute+AI+Food+Ordering)
 
 ```mermaid
 flowchart TB
