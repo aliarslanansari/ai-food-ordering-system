@@ -359,6 +359,9 @@ router.post("/", optionalAuth, async (req, res) => {
       session_id: sessionId,
       is_new_session: isNewSession,
       intent: intentData.intent,
+      message:
+        intentData.message ||
+        `Found ${results.length} delicious options for you!`,
       filters: normalizedFilters,
       filter_description: filterDescription,
       semantic_query: queryText,

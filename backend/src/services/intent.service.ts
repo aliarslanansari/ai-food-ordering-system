@@ -31,6 +31,7 @@ export interface ExtractedIntent {
   };
   semantic_query?: string | null;
   item_reference?: string | null;
+  message?: string | null; // Dynamic message to show to user
 }
 
 /**
@@ -85,7 +86,8 @@ Your job is to convert the CURRENT user message into STRICT JSON following EXACT
     "budget": number | null
   },
   "semantic_query": string | null,
-  "item_reference": string | null
+  "item_reference": string | null,
+  "message": string | null
 }
 
 Rules:
@@ -101,6 +103,7 @@ Rules:
 - If user says checkout/pay → intent = "checkout".
 - For semantic_query: extract the core food preference query (e.g., "chicken high protein low carb" from "I need chicken-based lunch, high protein, low carb")
 - For item_reference: capture references like "that", "it", "the first one", "both"
+- For message: Generate a friendly, dynamic message for "recommend" intent based on what the user is looking for. Be conversational and mention their specific preferences if any (e.g., "Here are some delicious vegetarian options for you!" or "I found some great high-protein chicken dishes!"). Set to null for other intents.
 
 Examples:
 
@@ -116,7 +119,8 @@ User: "I need something for lunch, chicken-based, high protein, low carb"
     "budget": null
   },
   "semantic_query": "chicken high protein low carb lunch",
-  "item_reference": null
+  "item_reference": null,
+  "message": "Here are some delicious high-protein chicken dishes perfect for your lunch!"
 }
 
 User: "What vegetarian options do you have?"
@@ -131,7 +135,8 @@ User: "What vegetarian options do you have?"
     "budget": null
   },
   "semantic_query": "vegetarian dishes",
-  "item_reference": null
+  "item_reference": null,
+  "message": "Here are some tasty vegetarian options for you!"
 }
 
 User: "Add two large pizzas to my cart"
@@ -146,7 +151,8 @@ User: "Add two large pizzas to my cart"
     "budget": null
   },
   "semantic_query": null,
-  "item_reference": "two large pizzas"
+  "item_reference": "two large pizzas",
+  "message": null
 }
 
 User: "Tell me more about that" (after being shown items)
@@ -161,7 +167,8 @@ User: "Tell me more about that" (after being shown items)
     "budget": null
   },
   "semantic_query": null,
-  "item_reference": "that"
+  "item_reference": "that",
+  "message": null
 }
 
 User: "Show me more like this"
@@ -176,7 +183,8 @@ User: "Show me more like this"
     "budget": null
   },
   "semantic_query": "similar items",
-  "item_reference": "this"
+  "item_reference": "this",
+  "message": "Here are some similar dishes you might enjoy!"
 }
 
 Now process this user message:
