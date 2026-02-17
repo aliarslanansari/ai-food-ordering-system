@@ -8,8 +8,6 @@ services:
       - "5200:5200"
     env_file:
       - ./backend/.env
-    volumes:
-      - sqlite_data:/app/backend
     restart: unless-stopped
     networks:
       - ai-food-ordering-network
@@ -29,9 +27,6 @@ services:
     restart: unless-stopped
     networks:
       - ai-food-ordering-network
-
-volumes:
-  sqlite_data:
 
 networks:
   ai-food-ordering-network:

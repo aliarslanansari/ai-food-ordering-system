@@ -12,8 +12,8 @@ RUN yarn install
 # Copy source code (excluding node_modules via .dockerignore)
 COPY . .
 
-# Rebuild better-sqlite3 for the current architecture
-RUN yarn add better-sqlite3 --force && yarn build
+# BUILD
+RUN yarn build
 
 # Expose backend port
 EXPOSE 5200

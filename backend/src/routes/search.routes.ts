@@ -20,7 +20,6 @@ import type { Food } from "../types/food.js";
 
 const router = Router();
 
-// Initialize services
 const sessionService = new SessionService();
 const cartService = new CartService();
 const referenceResolver = new ReferenceResolver(sessionService);
@@ -70,15 +69,6 @@ router.post("/", optionalAuth, async (req, res) => {
     // Step 4: Extract intent (with conversation context)
     const intentData = await extractIntent(message, conversationHistory);
 
-    console.log("Intent extracted:", {
-      intent: intentData.intent,
-      has_reference: !!intentData.item_reference,
-      reference: intentData.item_reference,
-    });
-
-    // ============================================================
-    // Handle ADD_TO_CART Intent (with multi-item, quantity, disambiguation support)
-    // ============================================================
     if (intentData.intent === "add_to_cart") {
       const quantity = intentData.quantity || 1;
       const foodsToAdd: any[] = [];

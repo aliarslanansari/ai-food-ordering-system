@@ -1,436 +1,50 @@
 # AI-Powered Food Ordering System
 
-An intelligent conversational food ordering platform with AI-powered recommendations, built with React, TypeScript, Node.js, and SQLite.
+An intelligent conversational food ordering platform with AI-powered recommendations, built with React, TypeScript, Node.js, and MongoDB.
 
-```mermaid
-flowchart TB
-    subgraph Client["🖥️ Client Layer"]
-        Web["Web App<br/>React + Vite"]
-        Mobile["Mobile<br/>Responsive"]
-    end
-    
-    subgraph Proxy["🔀 Proxy Layer"]
-        Nginx["Nginx<br/>Static Files + Reverse Proxy"]
-    end
-    
-    subgraph API["⚙️ API Layer (Node.js/Express)"]
-        Express["Express Server"]
-        Auth["Auth Routes<br/>/api/auth"]
-        Cart["Cart Routes<br/>/api/cart"]
-        Order["Order Routes<br/>/api/orders"]
-        Search["Search Routes<br/>/api/search"]
-        
-        subgraph Services["Service Layer"]
-            AuthSvc["Auth Service"]
-            CartSvc["Cart Service"]
-            OrderSvc["Order Service"]
-            SearchSvc["Search Service"]
-            IntentSvc["Intent Service"]
-            RetrievalSvc["Retrieval Service"]
-            GeminiSvc["Gemini Service"]
-            SessionSvc["Session Service"]
-        end
-    end
-    
-    subgraph Data["💾 Data Layer"]
-        SQLite[("SQLite<br/>Database")]
-        Embeddings[("Embeddings<br/>JSON")]
-    end
-    
-    subgraph External["🌐 External Services"]
-        GeminiAPI["Google Gemini API<br/>Embeddings + Intent"]
-        CDN["Image CDN<br/>ImageKit"]
-    end
-    
-    Web --> Nginx
-    Mobile --> Nginx
-    Nginx --> Express
-    Express --> Auth
-    Express --> Cart
-    Express --> Order
-    Express --> Search
-    
-    Auth --> AuthSvc
-    Cart --> CartSvc
-    Order --> OrderSvc
-    Search --> SearchSvc
-    
-    SearchSvc --> IntentSvc
-    SearchSvc --> RetrievalSvc
-    IntentSvc --> GeminiSvc
-    RetrievalSvc --> GeminiSvc
-    GeminiSvc --> GeminiAPI
-    
-    AuthSvc --> SQLite
-    CartSvc --> SQLite
-    OrderSvc --> SQLite
-    SessionSvc --> SQLite
-    RetrievalSvc --> Embeddings
-    
-    Web --> CDN
-```
+## Quick Start (Docker Compose)
 
-## Table of Contents
-
-1. [Features](#features)
-2. [Tech Stack](#tech-stack)
-3. [Project Structure](#project-structure)
-4. [Installation & Setup](#installation--setup)
-5. [Technical Requirements Document (TRD)](#technical-requirements-document-trd)
-6. [API Documentation](#api-documentation)
-7. [Usage Guide](#usage-guide)
-8. [Development](#development)
-9. [Deployment](#deployment)
-10. [Troubleshooting](#troubleshooting)
-11. [Contributing](#contributing)
-12. [License](#license)
-
-## Features
-
-### Core Features
-- **AI-Powered Chat Interface**: Natural language food ordering with context-aware recommendations
-- **Smart Food Recommendations**: Hybrid search combining semantic understanding with keyword matching
-- **Guest & User Sessions**: Browse and order as guest, or create an account for order history
-- **Real-time Cart Management**: Add, update, and remove items with persistent cart state
-- **Secure Checkout**: Form-validated delivery information with order confirmation
-- **Order History**: View past orders and track order status
-
-### AI Capabilities
-- **Intent Recognition**: Understands requests like "spicy vegetarian curries under ₹500"
-- **Context Memory**: Remembers previous selections and preferences within a session
-- **Smart Filters**: Automatically applies dietary, budget, and cuisine filters
-- **Multi-turn Conversations**: Follow-up questions and refinement of recommendations
-
-### Technical Highlights
-- **JWT Authentication**: Secure user authentication with bcrypt password hashing
-- **Session Management**: SQLite-backed sessions with automatic linking to user accounts
-- **Responsive Design**: Mobile-first UI built with shadcn/ui components
-- **Type Safety**: Full TypeScript implementation across frontend and backend
-- **State Management**: Zustand for client state, TanStack Query for server state
-
-## Tech Stack
-
-### Frontend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| React | 19.2.0 | UI Framework |
-| TypeScript | 5.9.3 | Type Safety |
-| Vite | 7.3.1 | Build Tool |
-| Tailwind CSS | 4.1.18 | Styling |
-| shadcn/ui | 3.8.4 | UI Components |
-| Zustand | 5.0.11 | Client State Management |
-| TanStack Query | 5.90.21 | Server State Management |
-| React Router | 7.13.0 | Routing |
-| Formik | 2.4.9 | Form Management |
-| Yup | 1.7.1 | Form Validation |
-
-### Backend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Node.js | 20.x | Runtime |
-| Express | 5.2.1 | Web Framework |
-| TypeScript | 5.9.3 | Type Safety |
-| SQLite | 3.x | Database |
-| better-sqlite3 | 12.6.2 | Database Driver |
-| Google Gemini API | 1.41.0 | AI/ML |
-| JWT | 9.0.3 | Authentication |
-| bcrypt | 6.0.0 | Password Hashing |
-
-### Infrastructure
-| Technology | Purpose |
-|------------|---------|
-| Docker | Containerization |
-| Docker Compose | Multi-container orchestration |
-| Nginx | Reverse proxy & static file serving |
-
-## Project Structure
-
-```
-ai-food-ordering/
-├── backend/
-│   ├── src/
-│   │   ├── index.ts              # Server entry point
-│   │   ├── config/               # Environment configuration
-│   │   │   └── env.ts            # Environment variables
-│   │   ├── data/                 # Food data and embeddings
-│   │   │   ├── foods.json        # Food catalog (100+ items)
-│   │   │   └── embeddings.json   # Pre-computed embeddings
-│   │   ├── db/                   # Database schema
-│   │   │   └── schema.sql        # SQLite schema
-│   │   ├── middleware/           # Auth middleware
-│   │   │   └── auth.middleware.ts
-│   │   ├── routes/               # API routes
-│   │   │   ├── auth.routes.ts    # Authentication endpoints
-│   │   │   ├── cart.routes.ts    # Cart management
-│   │   │   ├── foods.routes.ts   # Food catalog
-│   │   │   ├── order.routes.ts   # Order creation & history
-│   │   │   └── search.routes.ts  # AI search & chat
-│   │   ├── services/             # Business logic
-│   │   │   ├── auth.service.ts   # User authentication
-│   │   │   ├── cart.service.ts   # Cart operations
-│   │   │   ├── data.service.ts   # Food data management
-│   │   │   ├── database.service.ts # Database operations
-│   │   │   ├── embedding.service.ts # Vector embeddings
-│   │   │   ├── filter-normalizer.ts # Filter processing
-│   │   │   ├── gemini.service.ts  # Gemini API integration
-│   │   │   ├── intent.service.ts  # AI intent extraction
-│   │   │   ├── order.service.ts   # Order management
-│   │   │   ├── reference-resolver.service.ts # Context resolution
-│   │   │   ├── retrieval.service.ts # Hybrid search
-│   │   │   └── session.service.ts   # Session management
-│   │   ├── types/                # TypeScript types
-│   │   │   ├── food.ts           # Food type definitions
-│   │   │   └── search.ts         # Search type definitions
-│   │   └── utils/                # Utility functions
-│   │       ├── common.ts         # Common utilities
-│   │       └── cosine.ts         # Cosine similarity
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── Dockerfile
-│   └── .env.example
-├── frontend/
-│   ├── src/
-│   │   ├── api.ts                # API client with interceptors
-│   │   ├── App.tsx               # Main app component
-│   │   ├── components/           # UI components
-│   │   │   ├── ui/               # shadcn/ui components
-│   │   │   ├── CartSidebar.tsx   # Shopping cart drawer
-│   │   │   ├── ChatInput.tsx     # Chat input component
-│   │   │   ├── ChatMessage.tsx   # Chat message variants
-│   │   │   ├── FoodCard.tsx      # Food display card
-│   │   │   ├── FoodCardGrid.tsx  # Food grid layout
-│   │   │   ├── Header.tsx        # App header
-│   │   │   ├── Image.tsx         # Image component with CDN
-│   │   │   └── ProtectedRoute.tsx # Auth route guard
-│   │   ├── hooks/                # Custom React hooks
-│   │   │   ├── useAuth.ts        # Authentication hooks
-│   │   │   ├── useCartInit.ts    # Cart initialization
-│   │   │   ├── useChat.ts        # Chat mutation hook
-│   │   │   ├── useFoods.ts       # Food data hooks
-│   │   │   └── useOrders.ts      # Order management hooks
-│   │   ├── pages/                # Page components
-│   │   │   ├── Browse.tsx        # Food browsing page
-│   │   │   ├── Chat.tsx          # Main chat interface
-│   │   │   ├── Checkout.tsx      # Checkout form
-│   │   │   ├── Login.tsx         # Login page
-│   │   │   ├── OrderConfirmation.tsx # Order success page
-│   │   │   ├── OrderHistory.tsx  # Order history page
-│   │   │   └── Signup.tsx        # Signup page
-│   │   ├── stores/               # Zustand stores
-│   │   │   ├── auth.ts           # Auth state
-│   │   │   ├── cart.ts           # Cart state
-│   │   │   └── chat.ts           # Chat state
-│   │   ├── types/                # TypeScript types
-│   │   │   └── index.ts
-│   │   ├── lib/
-│   │   │   └── utils.ts          # Utility functions
-│   │   ├── providers.tsx         # Context providers
-│   │   ├── index.css             # Global styles
-│   │   └── main.tsx              # Entry point
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── vite.config.ts
-│   ├── Dockerfile
-│   └── .env.example
-├── docker-compose.yml
-└── README.md
-```
-
-## Installation & Setup
-
-### Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-| Requirement | Version | Installation |
-|-------------|---------|--------------|
-| Node.js | 18+ | [Download](https://nodejs.org/) |
-| npm or yarn | Latest | Included with Node.js |
-| Docker (optional) | 20+ | [Download](https://docs.docker.com/get-docker/) |
-| Docker Compose (optional) | 2+ | Included with Docker Desktop |
-| Google Gemini API Key | - | [Get API Key](https://makersuite.google.com/app/apikey) |
-
-### Method 1: Local Development Setup
-
-#### Step 1: Clone the Repository
+### 1. Create Environment Files
 
 ```bash
-git clone <repository-url>
-cd ai-food-ordering
-```
-
-#### Step 2: Backend Setup
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Install dependencies
-npm install
-# or
-yarn install
-
-# Copy environment variables
-cp .env.example .env
-
-# Edit .env file with your configuration
-# Required: GEMINI_API_KEY
-# Optional: Customize JWT_SECRET, PORT, etc.
-```
-
-**Backend Environment Variables:**
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `GEMINI_API_KEY` | Yes | - | Google Gemini API key |
-| `EMBEDDING_MODEL` | No | gemini-embedding-001 | Embedding model name |
-| `INTENT_MODEL` | No | models/gemini-2.0-flash | Intent extraction model |
-| `IMAGE_CDN_URL` | No | - | Image CDN base URL |
-| `PORT` | No | 5200 | Server port |
-| `NODE_ENV` | No | development | Environment mode |
-| `JWT_SECRET` | No | super-secret-jwt-key | JWT signing secret |
-
-#### Step 3: Generate Food Embeddings (One-time Setup)
-
-```bash
-cd backend
-
-# Generate embeddings for semantic search
-npm run generate:embeddings
-# or
-npx tsx src/scripts/generate-embeddings.ts
-```
-
-This creates `embeddings.json` with vector representations of all food items for AI-powered search.
-
-#### Step 4: Frontend Setup
-
-```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install dependencies
-npm install
-# or
-yarn install
-
-# Copy environment variables
-cp .env.example .env
-
-# Default values work for local development
-```
-
-**Frontend Environment Variables:**
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `VITE_API_URL` | Yes | http://localhost:5200/api | Backend API URL |
-
-#### Step 5: Start Development Servers
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-npm run dev
-# Server runs on http://localhost:5200
-```
-
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-npm run dev
-# Application runs on http://localhost:5173
-```
-
-### Method 2: Docker Setup (Recommended for Quick Start)
-
-#### Step 1: Clone and Configure
-
-```bash
-git clone <repository-url>
-cd ai-food-ordering
-
-# Create backend .env file
+# Backend environment
 cp backend/.env.example backend/.env
 
-# Edit backend/.env and add your GEMINI_API_KEY
+# Frontend environment
+cp frontend/.env.example frontend/.env
 ```
 
-#### Step 2: Start with Docker Compose
-
-```bash
-# Build and start all services
-docker compose up --build
-
-# Or run in detached mode
-docker compose up -d --build
+Edit `backend/.env` and add your Gemini API key:
+```env
+GEMINI_API_KEY=your-gemini-api-key-here
 ```
 
-**Services:**
-| Service | URL | Description |
-|---------|-----|-------------|
-| Frontend | http://localhost:3000 | React application |
-| Backend API | http://localhost:5200 | Express API |
-| Health Check | http://localhost:5200/health | API health status |
-
-#### Step 3: Stop Services
+### 2. Run with Docker Compose
 
 ```bash
-# Stop and remove containers
+docker compose up -d
+```
+
+The application will be available at:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5200
+
+### 3. Stop the Application
+
+```bash
 docker compose down
-
-# Stop and remove containers with volumes
-docker compose down -v
 ```
 
-### Method 3: Production Deployment
-
-#### Environment Setup
-
-```bash
-# Backend .env
-NODE_ENV=production
-PORT=5200
-JWT_SECRET=<strong-random-secret-min-32-chars>
-GEMINI_API_KEY=<your-production-api-key>
-EMBEDDING_MODEL=gemini-embedding-001
-INTENT_MODEL=models/gemini-2.0-flash
-```
-
-```bash
-# Frontend .env (build time)
-VITE_API_URL=https://api.yourdomain.com/api
-```
-
-#### Build and Deploy
-
-```bash
-# Build backend
-cd backend
-npm install
-npm run build
-npm start
-
-# Build frontend
-cd frontend
-npm install
-npm run build
-# Serve dist/ folder with nginx or similar
-```
+---
 
 ## Technical Requirements Document (TRD)
 
 ### 1. System Architecture
 
-#### 1.1 High-Level Architecture
-
 ```mermaid
 flowchart TB
     subgraph Client["🖥️ Client Layer"]
         Web["Web App<br/>React + Vite"]
-        Mobile["Mobile<br/>Responsive"]
-        Tablet["Tablet<br/>Responsive"]
-        Desktop["Desktop<br/>Responsive"]
     end
     
     subgraph Proxy["🔀 Proxy Layer"]
@@ -463,7 +77,7 @@ flowchart TB
     end
     
     subgraph Data["💾 Data Layer"]
-        SQLite[("SQLite<br/>Database")]
+        MongoDB[("MongoDB<br/>Database")]
         Embeddings[("Embeddings<br/>JSON File")]
     end
     
@@ -473,10 +87,6 @@ flowchart TB
     end
     
     Web --> Nginx
-    Mobile --> Nginx
-    Tablet --> Nginx
-    Desktop --> Nginx
-    
     Nginx --> Express
     Express --> Routes
     
@@ -493,144 +103,65 @@ flowchart TB
     RetrievalSvc --> EmbedSvc
     GeminiSvc --> GeminiAPI
     
-    AuthSvc --> SQLite
-    CartSvc --> SQLite
-    OrderSvc --> SQLite
-    SessionSvc --> SQLite
-    DataSvc --> SQLite
+    AuthSvc --> MongoDB
+    CartSvc --> MongoDB
+    OrderSvc --> MongoDB
+    SessionSvc --> MongoDB
+    DataSvc --> MongoDB
     EmbedSvc --> Embeddings
     
     Web -.-> CDN
 ```
 
-#### 1.2 Architecture Patterns
+### 2. Database Schema (MongoDB)
 
-| Pattern | Implementation | Purpose |
-|---------|----------------|---------|
-| **Layered Architecture** | Routes → Services → Data | Separation of concerns |
-| **Service Layer Pattern** | Business logic encapsulation | Reusable, testable code |
-| **Repository Pattern** | DatabaseService singleton | Data access abstraction |
-| **Singleton Pattern** | DatabaseService, Embeddings | Single instance management |
-| **Strategy Pattern** | Intent extraction, Search | Pluggable algorithms |
-| **Observer Pattern** | React hooks, Zustand stores | Reactive state updates |
+#### Collections
 
-### 2. Database Schema
+| Collection | Purpose | Key Fields |
+|------------|---------|------------|
+| **users** | Registered user accounts | `_id`, `email`, `password_hash`, `name`, `phone`, `created_at` |
+| **sessions** | Conversation sessions | `_id`, `user_id` (nullable), `created_at`, `last_message_at`, `metadata` |
+| **messages** | Chat history | `_id`, `session_id`, `role`, `content`, `intent`, `filters`, `results`, `timestamp` |
+| **session_contexts** | Conversation state | `session_id`, `last_mentioned_items`, `last_search_query`, `preferences`, `cart_id`, `updated_at` |
+| **carts** | Shopping carts | `_id`, `session_id`, `user_id`, `items[]`, `created_at`, `updated_at` |
+| **orders** | Completed orders | `_id`, `user_id`, `session_id`, `cart_snapshot`, `customer_info`, `total`, `status`, `payment_method`, `created_at` |
 
-#### 2.1 Entity Relationship Diagram
+#### Schema Relationships
 
 ```mermaid
-erDiagram
-    users ||--o{ sessions : "has"
-    users ||--o{ carts : "owns"
-    users ||--o{ orders : "places"
-    sessions ||--|| session_context : "has"
-    sessions ||--o{ messages : "contains"
-    sessions ||--|| carts : "has"
-    carts ||--o{ cart_items : "contains"
-    orders ||--o{ order_items : "contains"
+flowchart TB
+    subgraph Collections["📦 MongoDB Collections"]
+        U["👤 users<br/>_id, email, password_hash, name, phone"]
+        S["💬 sessions<br/>_id, user_id, created_at, metadata"]
+        M["📝 messages<br/>session_id, role, content, intent, timestamp"]
+        SC["🎯 session_contexts<br/>session_id, preferences, last_mentioned_items"]
+        C["🛒 carts<br/>session_id, user_id, items[], total"]
+        O["📋 orders<br/>user_id, session_id, cart_snapshot, status"]
+    end
     
-    users {
-        string id PK
-        string email UK
-        string password_hash
-        string name
-        string phone
-        integer created_at
-    }
+    U -->|"has many"| S
+    U -->|"owns"| C
+    U -->|"places"| O
+    S -->|"contains"| M
+    S -->|"has one"| SC
+    S -->|"has one"| C
     
-    sessions {
-        string id PK
-        string user_id FK
-        integer created_at
-        integer last_message_at
-        json metadata
-    }
-    
-    session_context {
-        string session_id PK, FK
-        json last_mentioned_items
-        string last_search_query
-        json preferences
-        string cart_id
-        integer updated_at
-    }
-    
-    messages {
-        string id PK
-        string session_id FK
-        string role
-        string content
-        string intent
-        json filters
-        json results
-        integer timestamp
-    }
-    
-    carts {
-        string id PK
-        string session_id FK
-        string user_id FK
-        integer created_at
-        integer updated_at
-    }
-    
-    cart_items {
-        string id PK
-        string cart_id FK
-        string food_id
-        string food_name
-        integer quantity
-        float price
-        integer added_at
-    }
-    
-    orders {
-        string id PK
-        string user_id FK
-        string session_id FK
-        string cart_id
-        string customer_name
-        string phone
-        string address
-        string delivery_instructions
-        float total
-        string status
-        string payment_method
-        integer created_at
-    }
-    
-    order_items {
-        string id PK
-        string order_id FK
-        string food_id
-        string food_name
-        integer quantity
-        float price
-    }
+    style U fill:#e3f2fd,stroke:#333,stroke-width:2px
+    style S fill:#f3e5f5,stroke:#333,stroke-width:2px
+    style C fill:#e8f5e9,stroke:#333,stroke-width:2px
+    style O fill:#fff3e0,stroke:#333,stroke-width:2px
 ```
 
-#### 2.2 Schema Details
+#### Indexes
 
-| Table | Purpose | Key Fields |
-|-------|---------|------------|
-| **users** | Registered user accounts | id, email, password_hash, name, phone |
-| **sessions** | Conversation sessions | id, user_id (nullable), created_at, metadata |
-| **messages** | Chat history | id, session_id, role, content, intent, filters, results |
-| **session_context** | Conversation state | session_id, last_mentioned_items, preferences |
-| **carts** | Shopping carts | id, session_id, user_id, created_at, updated_at |
-| **cart_items** | Cart contents | id, cart_id, food_id, food_name, quantity, price |
-| **orders** | Completed orders | id, user_id, cart_id, customer info, total, status |
-| **order_items** | Order line items | id, order_id, food_id, food_name, quantity, price |
-
-#### 2.3 Indexes
-
-```sql
--- Performance indexes
-CREATE INDEX idx_sessions_user ON sessions(user_id);
-CREATE INDEX idx_carts_user ON carts(user_id);
-CREATE INDEX idx_messages_session ON messages(session_id);
-CREATE INDEX idx_cart_items_cart ON cart_items(cart_id);
-CREATE INDEX idx_order_items_order ON order_items(order_id);
+```javascript
+// Performance indexes
+db.users.createIndex({ email: 1 }, { unique: true });
+db.sessions.createIndex({ user_id: 1 });
+db.messages.createIndex({ session_id: 1, timestamp: -1 });
+db.carts.createIndex({ session_id: 1 });
+db.carts.createIndex({ user_id: 1 });
+db.orders.createIndex({ user_id: 1, created_at: -1 });
 ```
 
 ### 3. AI/ML Architecture
@@ -852,16 +383,6 @@ flowchart TD
 | **Chat Store** | Zustand | Chat messages, session ID |
 | **Server State** | TanStack Query | API data caching |
 
-#### 5.3 Custom Hooks
-
-| Hook | Purpose |
-|------|---------|
-| `useAuth` | Authentication operations |
-| `useChat` | Chat mutations |
-| `useCartInit` | Cart initialization |
-| `useFoods` | Food data fetching |
-| `useOrders` | Order management |
-
 ### 6. Security Architecture
 
 #### 6.1 Authentication Flow
@@ -899,10 +420,10 @@ sequenceDiagram
 | **Password Hashing** | bcrypt with salt rounds: 10 |
 | **Token Signing** | JWT with HS256 algorithm |
 | **Token Storage** | httpOnly cookies (backend) / memory (frontend) |
-| **Session Management** | SQLite-backed with UUID |
+| **Session Management** | MongoDB-backed with UUID |
 | **CORS** | Whitelist-based origins |
 | **Input Validation** | Yup schemas on frontend, manual validation on backend |
-| **SQL Injection** | Parameterized queries via better-sqlite3 |
+| **NoSQL Injection** | Input sanitization and schema validation |
 
 ### 7. Performance Considerations
 
@@ -910,7 +431,7 @@ sequenceDiagram
 
 | Area | Strategy | Implementation |
 |------|----------|----------------|
-| **Database** | Connection pooling | better-sqlite3 persistent connection |
+| **Database** | Connection pooling | MongoDB native driver with connection pooling |
 | **Search** | Pre-computed embeddings | JSON file caching |
 | **Images** | CDN delivery | ImageKit integration |
 | **Frontend** | Code splitting | Vite dynamic imports |
@@ -955,407 +476,13 @@ services:
   backend:
     build: ./backend
     ports: ["5200:5200"]
-    volumes:
-      - sqlite_data:/app/backend  # Persistent database
-    environment:
-      - NODE_ENV=production
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
       
   frontend:
     build: ./frontend
     ports: ["3000:80"]
     depends_on: [backend]
-    
-volumes:
-  sqlite_data:  # Named volume for data persistence
+    restart: unless-stopped
 ```
-
-#### 8.2 Production Checklist
-
-- [ ] Set strong JWT_SECRET (min 32 chars)
-- [ ] Use production Gemini API key
-- [ ] Enable HTTPS
-- [ ] Configure proper CORS origins
-- [ ] Set up log rotation
-- [ ] Configure backup for SQLite database
-- [ ] Set up monitoring/health checks
-
-## API Documentation
-
-### Authentication Endpoints
-
-#### POST /api/auth/register
-Create a new user account.
-
-**Request:**
-```json
-{
-  "email": "user@example.com",
-  "password": "securepassword123",
-  "name": "John Doe",
-  "phone": "+91 9876543210"
-}
-```
-
-**Response:**
-```json
-{
-  "user": {
-    "id": "usr_abc123",
-    "email": "user@example.com",
-    "name": "John Doe",
-    "phone": "+91 9876543210"
-  },
-  "token": "eyJhbGciOiJIUzI1NiIs..."
-}
-```
-
-#### POST /api/auth/login
-Authenticate and receive JWT token.
-
-**Request:**
-```json
-{
-  "email": "user@example.com",
-  "password": "securepassword123"
-}
-```
-
-#### GET /api/auth/me
-Get current authenticated user (requires JWT).
-
-### Chat & Search Endpoints
-
-#### POST /api/search
-Send a message to the AI assistant.
-
-**Request:**
-```json
-{
-  "message": "Show me vegetarian curries under ₹500",
-  "sessionId": "optional-existing-session"
-}
-```
-
-**Response:**
-```json
-{
-  "response": "Here are some great vegetarian curries!",
-  "foods": [
-    {
-      "id": "food_123",
-      "name": "Paneer Butter Masala",
-      "description": "Creamy tomato curry with paneer",
-      "price": 399,
-      "image_url": "...",
-      "nutrition": { "calories": 450, "protein": 18, "carbs": 22, "fat": 28 }
-    }
-  ],
-  "sessionId": "sess_xyz789",
-  "intent": "recommend",
-  "filters": { "vegetarian": true, "maxPrice": 500 }
-}
-```
-
-#### GET /api/search/:sessionId/history
-Get chat history for a session.
-
-### Cart Endpoints
-
-#### GET /api/cart
-Get current cart contents (requires session cookie).
-
-#### POST /api/cart/items
-Add item to cart.
-
-**Request:**
-```json
-{
-  "foodId": "food_123",
-  "quantity": 2
-}
-```
-
-#### PUT /api/cart/items/:itemId
-Update item quantity.
-
-#### DELETE /api/cart/items/:itemId
-Remove item from cart.
-
-### Order Endpoints
-
-#### GET /api/orders
-Get order history (authenticated).
-
-#### POST /api/orders
-Create order from cart (authenticated).
-
-**Request:**
-```json
-{
-  "deliveryInfo": {
-    "name": "John Doe",
-    "phone": "+91 9876543210",
-    "address": "123 Main St, City",
-    "deliveryInstructions": "Ring doorbell"
-  }
-}
-```
-
-## Usage Guide
-
-### As a Guest
-
-1. Visit the chat page at `/`
-2. Start chatting with the AI assistant (e.g., "Show me vegetarian curries")
-3. Add recommended items to cart using the "Add to Cart" buttons
-4. Click the cart icon to review items
-5. Proceed to checkout (login/signup required to complete order)
-
-### As a Registered User
-
-1. Sign up at `/signup` with email, name, phone, and password
-2. Login at `/login` to access full features
-3. Chat with AI for personalized recommendations
-4. Add items to cart
-5. Proceed to checkout with saved delivery info
-6. View order history at `/orders`
-
-### Example Chat Queries
-
-| Query | Expected Response |
-|-------|-------------------|
-| "Show me some spicy appetizers under ₹300" | Filtered food cards |
-| "I want high protein non-vegetarian dishes" | Protein-rich options |
-| "Recommend something for 4 people around ₹1000" | Family-sized portions |
-| "Add 2 Butter Chicken and 1 Garlic Naan to cart" | Cart update confirmation |
-| "What are your popular desserts?" | Dessert category items |
-| "Tell me more about the first one" | Item details |
-
-## Development
-
-### Adding New Food Items
-
-1. Edit `backend/src/data/foods.json`
-2. Add new food item following the existing schema:
-```json
-{
-  "id": "food_unique_id",
-  "name": "Food Name",
-  "description": "Description",
-  "category": "Category",
-  "type": "Vegetarian|Non-Vegetarian",
-  "spiceLevel": "Low|Medium|High",
-  "ingredients": ["ingredient1", "ingredient2"],
-  "nutrition": { "calories": 0, "protein": 0, "carbs": 0, "fat": 0 },
-  "price": 0,
-  "serves": 1,
-  "image_url": "https://..."
-}
-```
-3. Run `npm run generate:embeddings` in backend
-4. Restart backend server
-
-### Customizing the AI
-
-Modify the system prompt in `backend/src/services/intent.service.ts` to change AI behavior:
-
-```typescript
-const prompt = `
-You are an AI intent extraction engine for a restaurant ordering system.
-[Customize this prompt to change personality, tone, or capabilities]
-`;
-```
-
-### Frontend Component Development
-
-The project uses shadcn/ui. Add new components:
-
-```bash
-cd frontend
-npx shadcn add <component-name>
-```
-
-Available components: button, card, input, select, dialog, sheet, etc.
-
-### Running Tests
-
-```bash
-# Backend tests (if implemented)
-cd backend
-npm test
-
-# Frontend tests (if implemented)
-cd frontend
-npm test
-```
-
-### Code Quality
-
-```bash
-# Lint frontend
-cd frontend
-npm run lint
-
-# Type check backend
-cd backend
-npx tsc --noEmit
-```
-
-## Deployment
-
-### Environment Variables for Production
-
-**Backend (.env):**
-```
-NODE_ENV=production
-PORT=5200
-JWT_SECRET=<strong-random-secret-min-32-characters>
-GEMINI_API_KEY=<your-production-api-key>
-EMBEDDING_MODEL=gemini-embedding-001
-INTENT_MODEL=models/gemini-2.0-flash
-IMAGE_CDN_URL=https://your-cdn.com/
-```
-
-**Frontend (.env):**
-```
-VITE_API_URL=https://api.yourdomain.com/api
-```
-
-### Docker Deployment
-
-```bash
-# Production build
-docker compose -f docker-compose.yml up -d --build
-
-# View logs
-docker compose logs -f
-
-# Scale backend (if using multiple instances)
-docker compose up -d --scale backend=3
-```
-
-### Manual Deployment
-
-**Backend:**
-```bash
-cd backend
-npm install
-npm run build
-npm start  # Uses dist/index.js
-```
-
-**Frontend:**
-```bash
-cd frontend
-npm install
-npm run build
-# Serve dist/ folder with nginx
-```
-
-### Nginx Configuration
-
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com;
-    
-    location / {
-        root /path/to/frontend/dist;
-        try_files $uri $uri/ /index.html;
-    }
-    
-    location /api {
-        proxy_pass http://localhost:5200;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-## Troubleshooting
-
-### Common Issues
-
-#### Issue: "GEMINI_API_KEY is not defined"
-**Solution:**
-```bash
-cd backend
-cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY
-```
-
-#### Issue: "Cannot find module 'better-sqlite3'"
-**Solution:**
-```bash
-cd backend
-rm -rf node_modules
-npm install
-# On macOS with Apple Silicon, you may need:
-npm rebuild better-sqlite3
-```
-
-#### Issue: "Port 5200 is already in use"
-**Solution:**
-```bash
-# Find and kill process
-lsof -ti:5200 | xargs kill -9
-# Or change port in .env
-PORT=5201
-```
-
-#### Issue: "No embeddings found"
-**Solution:**
-```bash
-cd backend
-npm run generate:embeddings
-```
-
-#### Issue: "CORS error in browser"
-**Solution:**
-Check that `CORS_ORIGINS` in backend includes your frontend URL:
-```env
-CORS_ORIGINS=http://localhost:5173,http://localhost:3000
-```
-
-#### Issue: Docker container exits immediately
-**Solution:**
-```bash
-# Check logs
-docker compose logs backend
-
-# Ensure .env file exists
-cat backend/.env | grep GEMINI_API_KEY
-
-# Rebuild without cache
-docker compose down -v
-docker compose up --build
-```
-
-#### Issue: "JWT token expired"
-**Solution:**
-- Clear browser cookies
-- Login again
-- Check JWT_SECRET is consistent between restarts
-
-### Debug Mode
-
-Enable verbose logging:
-
-```bash
-# Backend
-debug=true npm run dev
-
-# Or set in .env
-DEBUG=*
-```
-
-### Getting Help
-
-1. Check application logs
-2. Verify environment variables
-3. Test API health: `curl http://localhost:5200/health`
-4. Review browser console for frontend errors
-5. Check Docker container status: `docker compose ps`
