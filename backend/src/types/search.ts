@@ -60,4 +60,16 @@ export interface SearchResponse {
   requires_disambiguation?: boolean;
   // For compound requests
   secondary_results?: any[];
+  // For result availability info
+  result_info?: {
+    requested: number | null;
+    available: number;
+    message: string;
+  };
+  // For related recommendations when exact matches not found
+  related_recommendations?: {
+    reason: string;
+    message: string;
+    items: any[];
+  };
 }

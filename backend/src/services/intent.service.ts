@@ -33,11 +33,13 @@ export interface ExtractedIntent {
   item_reference?: string | null;
   items?: string[] | null; // Multiple named items for add_to_cart (e.g., ["Grilled Chicken", "Caesar Salad"])
   quantity?: number | null; // Quantity for add_to_cart (e.g., 2 for "add two pizzas")
+  limit?: number | null; // Number of recommendations requested (e.g., 3 for "show me 3 options")
   message?: string | null; // Dynamic message to show to user
   follow_up_question?: string | null; // Follow-up question to suggest add-ons/sides
   requires_disambiguation?: boolean | null; // True when add_to_cart needs clarification
   secondary_intent?: "recommend" | null; // For compound requests (e.g., "add that and show me naan")
   secondary_query?: string | null; // Secondary search query for compound requests
+  requested_count?: number | null; // Original count user asked for (to detect if fewer results than requested)
 }
 
 /**
@@ -95,11 +97,13 @@ Your job is to convert the CURRENT user message into STRICT JSON following EXACT
   "item_reference": string | null,
   "items": string[] | null,
   "quantity": number | null,
+  "limit": number | null,
   "message": string | null,
   "follow_up_question": string | null,
   "requires_disambiguation": boolean | null,
   "secondary_intent": "recommend" | null,
-  "secondary_query": string | null
+  "secondary_query": string | null,
+  "requested_count": number | null
 }
 
 Rules:
@@ -117,8 +121,10 @@ Rules:
 - For item_reference: capture references like "that", "it", "the first one", "both", "those"
 - For items: When user names multiple specific items to add (e.g., "Add the Grilled Chicken, Caesar Salad, and Orange Juice"), extract as array of item names: ["Grilled Chicken", "Caesar Salad", "Orange Juice"]. Set to null for single items or references.
 - For quantity: Extract number when user says "add two pizzas" or "get 3 of those". Set to null if not specified (defaults to 1).
+- For limit: Extract the number of recommendations user wants to see (e.g., "show me 3 options" → 3, "give me 5 dishes" → 5, "what are my choices" → null). This is for display purposes - minimum 2 will be enforced. Set to null if not specified.
+- For requested_count: Same as limit - stores the original requested number to detect if fewer results are available than requested. Set to null if user didn't specify a count.
 - For message: Generate a friendly, dynamic message for "recommend" intent based on what the user is looking for. Be conversational and mention their specific preferences if any (e.g., "Here are some delicious vegetarian options for you!" or "I found some great high-protein chicken dishes!"). Set to null for other intents.
-- For follow_up_question: For "recommend" intent, generate a conversational question suggesting sides, drinks, or add-ons that would complement the main dishes shown. Examples: "Would you like to add any sides or drinks?" or "Can I suggest some fresh juices or salads to go with that?" Set to null for other intents or if user is already looking for sides/drinks.
+- For follow_up_question: For "recommend" intent, generate a conversational question suggesting sides, drinks, or add-ons that would complement the main dishes shown. Set to null for other intents or if user is already looking for sides/drinks.
 - For requires_disambiguation: Set to TRUE when user wants to add something but there's no conversation context AND the request is ambiguous (e.g., "Add a pizza" without prior context). In this case, intent should be "disambiguate" and semantic_query should contain what to search for. Set to null otherwise.
 - For secondary_intent and secondary_query: When user combines requests like "add that and show me naan" or "I want that with some bread", set secondary_intent="recommend" and secondary_query with the additional item search (e.g., "naan", "bread"). Set to null for simple requests.
 
@@ -138,7 +144,33 @@ User: "I need something for lunch, chicken-based, high protein, low carb"
   "semantic_query": "chicken high protein low carb lunch",
   "item_reference": null,
   "message": "Here are some delicious high-protein chicken dishes perfect for your lunch!",
-  "follow_up_question": "Would you like to add any sides, salads, or drinks to complete your meal?"
+  "follow_up_question": "Would you like to add any sides, salads, or drinks to complete your meal?",
+  "limit": null,
+  "requested_count": null
+}
+
+User: "Show me 3 vegetarian options"
+{
+  "intent": "recommend",
+  "filters": {
+    "category": null,
+    "protein_level": null,
+    "carb_level": null,
+    "vegetarian": true,
+    "spiceLevel": null,
+    "budget": null
+  },
+  "semantic_query": "vegetarian dishes",
+  "item_reference": null,
+  "items": null,
+  "quantity": null,
+  "limit": 3,
+  "message": "Here are 3 tasty vegetarian options for you!",
+  "follow_up_question": "Can I suggest some refreshing beverages or sides to go with your meal?",
+  "requires_disambiguation": null,
+  "secondary_intent": null,
+  "secondary_query": null,
+  "requested_count": 3
 }
 
 User: "What vegetarian options do you have?"
