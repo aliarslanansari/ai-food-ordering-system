@@ -73,6 +73,13 @@ export interface CartWithItems {
   item_count: number;
 }
 
+// Related Recommendations
+export interface RelatedRecommendations {
+  reason: string;
+  message: string;
+  items: Food[];
+}
+
 // Chat Types
 export type MessageRole = "user" | "assistant";
 
@@ -91,6 +98,7 @@ export interface ChatMessage {
   intent?: Intent;
   foods?: Food[];
   secondaryFoods?: Food[]; // For compound requests
+  relatedFoods?: RelatedRecommendations; // For related recommendations when no exact matches
   cartSummary?: CartSummary;
   followUpQuestion?: string;
   showCheckoutButton?: boolean;
@@ -123,6 +131,7 @@ export interface SearchResponse {
   semantic_query?: string;
   results: Food[];
   secondary_results?: Food[]; // For compound requests
+  related_recommendations?: RelatedRecommendations; // For related recommendations when no exact matches
   total: number;
   search_mode: "hybrid" | "semantic" | "keyword" | "no_results";
   message: string;

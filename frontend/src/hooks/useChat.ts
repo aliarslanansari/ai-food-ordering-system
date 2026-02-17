@@ -65,6 +65,7 @@ export function useChat() {
         intent: data.intent,
         foods: data.results,
         secondaryFoods: data.secondary_results,
+        relatedFoods: data.related_recommendations,
         cartSummary: data.cart_summary,
         followUpQuestion: data.follow_up_question,
         showCheckoutButton: data.show_checkout_button,
