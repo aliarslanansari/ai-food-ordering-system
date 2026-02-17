@@ -64,8 +64,11 @@ export function useChat() {
         content: data.message,
         intent: data.intent,
         foods: data.results,
+        secondaryFoods: data.secondary_results,
         cartSummary: data.cart_summary,
         followUpQuestion: data.follow_up_question,
+        showCheckoutButton: data.show_checkout_button,
+        requiresDisambiguation: data.requires_disambiguation,
         timestamp: Date.now(),
       });
     },

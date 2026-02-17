@@ -10,11 +10,13 @@ import {
   normalizeFilters,
   describeFilters,
 } from "../services/filter-normalizer.js";
+import { getFoods } from "../services/data.service.js";
 import { SearchMode, SearchResponse } from "../types/search.js";
 import { SessionService } from "../services/session.service.js";
 import { CartService } from "../services/cart.service.js";
 import { ReferenceResolver } from "../services/reference-resolver.service.js";
 import { optionalAuth } from "../middleware/auth.middleware.js";
+import type { Food } from "../types/food.js";
 
 const router = Router();
 
@@ -75,66 +77,95 @@ router.post("/", optionalAuth, async (req, res) => {
     });
 
     // ============================================================
-    // Handle ADD_TO_CART Intent
+    // Handle ADD_TO_CART Intent (with multi-item, quantity, disambiguation support)
     // ============================================================
     if (intentData.intent === "add_to_cart") {
-      // Try to resolve reference
-      if (intentData.item_reference) {
+      const quantity = intentData.quantity || 1;
+      const foodsToAdd: any[] = [];
+
+      // Case 1: Multiple named items provided (e.g., "Add Grilled Chicken, Caesar Salad, and Orange Juice")
+      if (intentData.items && intentData.items.length > 0) {
+        const allFoods = getFoods();
+        for (const itemName of intentData.items) {
+          // Search for food by name (fuzzy match)
+          const matchedFood = allFoods.find(
+            (f: Food) =>
+              f.name.toLowerCase().includes(itemName.toLowerCase()) ||
+              itemName.toLowerCase().includes(f.name.toLowerCase()),
+          );
+          if (matchedFood) {
+            foodsToAdd.push(matchedFood);
+          }
+        }
+      }
+      // Case 2: Item reference provided (e.g., "that", "first one", "those")
+      else if (intentData.item_reference) {
         const resolved = await referenceResolver.resolveReference(
           intentData.item_reference,
           sessionId,
         );
 
         if (resolved.items.length > 0) {
-          // Get or create cart with user context
-          const cart = await cartService.getOrCreateCart(sessionId, userId);
+          foodsToAdd.push(...resolved.items);
+        } else {
+          // Could not resolve - check if we need disambiguation
+          const lastItems = await sessionService.getContext(sessionId);
+          if (!lastItems?.last_mentioned_items?.length) {
+            // No context - switch to disambiguation mode
+            const queryText =
+              intentData.semantic_query || intentData.item_reference;
+            const queryEmbedding = await generateQueryEmbedding(queryText);
 
-          // Add resolved items to cart
-          const addedItems = [];
-          for (const food of resolved.items) {
-            const item = await cartService.addItem({
-              cart_id: cart.id,
-              session_id: sessionId,
-              user_id: userId,
-              food_id: food.id,
-              food_name: food.name,
-              quantity: 1,
-              price: food.price,
-            });
-            addedItems.push(item);
+            if (queryEmbedding) {
+              const searchResults = hybridSearch(queryEmbedding, {});
+              const topResults = searchResults.slice(0, 5);
+
+              if (topResults.length > 0) {
+                // Update session context
+                const itemIds = topResults.map((r) => r.id);
+                await sessionService.updateLastMentionedItems(
+                  sessionId,
+                  itemIds,
+                );
+
+                const cartWithItems = await cartService.getCartWithItems(
+                  sessionId,
+                  userId,
+                );
+                const cartSummary = cartWithItems
+                  ? {
+                      has_cart: true,
+                      item_count: cartWithItems.item_count,
+                      total: cartWithItems.total,
+                    }
+                  : { has_cart: false, item_count: 0, total: 0 };
+
+                const response: SearchResponse = {
+                  session_id: sessionId,
+                  is_new_session: isNewSession,
+                  intent: "disambiguate",
+                  message: `We have several options for "${intentData.item_reference}"! Here are our choices:`,
+                  follow_up_question: "Which one would you like to add?",
+                  requires_disambiguation: true,
+                  results: topResults,
+                  total: topResults.length,
+                  search_mode: SearchMode.Hybrid,
+                  cart_summary: cartSummary,
+                };
+
+                await sessionService.addMessage({
+                  session_id: sessionId,
+                  role: "assistant",
+                  content: JSON.stringify(response),
+                  intent: "disambiguate",
+                  results: topResults,
+                });
+
+                return res.json(response);
+              }
+            }
           }
 
-          // Get updated cart
-          const cartWithItems = await cartService.getCartWithItems(
-            sessionId,
-            userId,
-          );
-
-          const response = {
-            session_id: sessionId,
-            is_new_session: isNewSession,
-            intent: "add_to_cart",
-            message: `Added ${addedItems.length} item(s) to cart: ${addedItems.map((i) => i.food_name).join(", ")}`,
-            items_added: addedItems,
-            cart: cartWithItems,
-            resolution: {
-              reference: intentData.item_reference,
-              resolved_to: resolved.items.map((f) => f.name),
-              confidence: resolved.confidence,
-              reason: resolved.reason,
-            },
-          };
-
-          // Save assistant response
-          await sessionService.addMessage({
-            session_id: sessionId,
-            role: "assistant",
-            content: JSON.stringify(response),
-            intent: "add_to_cart",
-          });
-
-          return res.json(response);
-        } else {
           // Could not resolve reference
           const response = {
             session_id: sessionId,
@@ -155,14 +186,58 @@ router.post("/", optionalAuth, async (req, res) => {
 
           return res.json(response);
         }
-      } else {
-        // No reference provided - ask user to clarify
-        const response = {
+      }
+
+      // If we have foods to add, add them to cart
+      if (foodsToAdd.length > 0) {
+        const cart = await cartService.getOrCreateCart(sessionId, userId);
+        const addedItems = [];
+
+        for (const food of foodsToAdd) {
+          const item = await cartService.addItem({
+            cart_id: cart.id,
+            session_id: sessionId,
+            user_id: userId,
+            food_id: food.id,
+            food_name: food.name,
+            quantity: quantity,
+            price: food.price,
+          });
+          addedItems.push(item);
+        }
+
+        const cartWithItems = await cartService.getCartWithItems(
+          sessionId,
+          userId,
+        );
+        const totalAmount = addedItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
+        );
+
+        // Build formatted message
+        const itemList = addedItems
+          .map((i) => `• ${i.food_name} - ₹${i.price} x${i.quantity}`)
+          .join("\n");
+        const message = `Perfect! I've added:\n${itemList}\nTotal: ₹${totalAmount.toFixed(2)}`;
+
+        const response: SearchResponse = {
           session_id: sessionId,
           is_new_session: isNewSession,
           intent: "add_to_cart",
-          message: "Which item would you like to add to your cart?",
-          suggestion: "Please search for an item first, then add it to cart.",
+          message: message,
+          follow_up_question:
+            "Would you like to checkout or continue browsing?",
+          items_added: addedItems,
+          cart: cartWithItems,
+          cart_summary: cartWithItems
+            ? {
+                has_cart: true,
+                item_count: cartWithItems.item_count,
+                total: cartWithItems.total,
+              }
+            : { has_cart: false, item_count: 0, total: 0 },
+          show_checkout_button: true,
         };
 
         await sessionService.addMessage({
@@ -174,6 +249,24 @@ router.post("/", optionalAuth, async (req, res) => {
 
         return res.json(response);
       }
+
+      // No items to add - ask for clarification
+      const response = {
+        session_id: sessionId,
+        is_new_session: isNewSession,
+        intent: "add_to_cart",
+        message: "Which item would you like to add to your cart?",
+        suggestion: "Please search for an item first, then add it to cart.",
+      };
+
+      await sessionService.addMessage({
+        session_id: sessionId,
+        role: "assistant",
+        content: JSON.stringify(response),
+        intent: "add_to_cart",
+      });
+
+      return res.json(response);
     }
 
     // ============================================================
@@ -223,6 +316,66 @@ router.post("/", optionalAuth, async (req, res) => {
     }
 
     // ============================================================
+    // Handle DISAMBIGUATE Intent
+    // ============================================================
+    if (intentData.intent === "disambiguate") {
+      const queryText = intentData.semantic_query || message;
+      const queryEmbedding = await generateQueryEmbedding(queryText);
+
+      if (!queryEmbedding) {
+        return res
+          .status(500)
+          .json({ error: "Failed to generate query embedding" });
+      }
+
+      const disambigFilters = normalizeFilters(intentData.filters);
+      const searchResults = hybridSearch(queryEmbedding, disambigFilters);
+      const topResults = searchResults.slice(0, 5);
+
+      if (topResults.length > 0) {
+        const itemIds = topResults.map((r) => r.id);
+        await sessionService.updateLastMentionedItems(sessionId, itemIds);
+      }
+
+      const cartWithItems = await cartService.getCartWithItems(
+        sessionId,
+        userId,
+      );
+      const cartSummary = cartWithItems
+        ? {
+            has_cart: true,
+            item_count: cartWithItems.item_count,
+            total: cartWithItems.total,
+          }
+        : { has_cart: false, item_count: 0, total: 0 };
+
+      const response: SearchResponse = {
+        session_id: sessionId,
+        is_new_session: isNewSession,
+        intent: "disambiguate",
+        message:
+          intentData.message || `Here are some options for "${queryText}":`,
+        follow_up_question:
+          intentData.follow_up_question || "Which one would you like?",
+        requires_disambiguation: true,
+        results: topResults,
+        total: topResults.length,
+        search_mode: SearchMode.Hybrid,
+        cart_summary: cartSummary,
+      };
+
+      await sessionService.addMessage({
+        session_id: sessionId,
+        role: "assistant",
+        content: JSON.stringify(response),
+        intent: "disambiguate",
+        results: topResults,
+      });
+
+      return res.json(response);
+    }
+
+    // ============================================================
     // Handle CHECKOUT Intent
     // ============================================================
     if (intentData.intent === "checkout") {
@@ -238,13 +391,19 @@ router.post("/", optionalAuth, async (req, res) => {
         });
       }
 
-      const response = {
+      const response: SearchResponse = {
         session_id: sessionId,
         is_new_session: isNewSession,
         intent: "checkout",
         message: "Ready to checkout!",
         cart: cartWithItems,
+        cart_summary: {
+          has_cart: true,
+          item_count: cartWithItems.item_count,
+          total: cartWithItems.total,
+        },
         next_step: "Please provide delivery details",
+        show_checkout_button: true,
       };
 
       await sessionService.addMessage({
@@ -299,6 +458,30 @@ router.post("/", optionalAuth, async (req, res) => {
       const itemIds = results.slice(0, 10).map((r) => r.id);
       await sessionService.updateLastMentionedItems(sessionId, itemIds);
       await sessionService.updateLastSearchQuery(sessionId, queryText);
+    }
+
+    // Handle compound requests (e.g., "add that and show me naan")
+    let secondaryResults: any[] = [];
+    if (
+      intentData.secondary_intent === "recommend" &&
+      intentData.secondary_query
+    ) {
+      const secondaryEmbedding = await generateQueryEmbedding(
+        intentData.secondary_query,
+      );
+      if (secondaryEmbedding) {
+        secondaryResults = hybridSearch(secondaryEmbedding, {});
+        if (secondaryResults.length > 0) {
+          // Add secondary results to context as well
+          const secondaryIds = secondaryResults.slice(0, 5).map((r) => r.id);
+          const currentContext = await sessionService.getContext(sessionId);
+          const combinedIds = [
+            ...(currentContext?.last_mentioned_items || []),
+            ...secondaryIds,
+          ];
+          await sessionService.updateLastMentionedItems(sessionId, combinedIds);
+        }
+      }
     }
 
     // Prepare response
@@ -376,6 +559,8 @@ router.post("/", optionalAuth, async (req, res) => {
         turn_number: Math.floor(summary.userMessages),
       },
       cart_summary: cartSummary,
+      secondary_results:
+        secondaryResults.length > 0 ? secondaryResults.slice(0, 5) : undefined,
     };
 
     // Add fallback info if used

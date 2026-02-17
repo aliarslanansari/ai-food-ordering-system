@@ -81,6 +81,7 @@ export type Intent =
   | "add_to_cart"
   | "details"
   | "checkout"
+  | "disambiguate"
   | "unknown";
 
 export interface ChatMessage {
@@ -89,8 +90,11 @@ export interface ChatMessage {
   content: string;
   intent?: Intent;
   foods?: Food[];
+  secondaryFoods?: Food[]; // For compound requests
   cartSummary?: CartSummary;
   followUpQuestion?: string;
+  showCheckoutButton?: boolean;
+  requiresDisambiguation?: boolean;
   timestamp: number;
 }
 
@@ -118,6 +122,7 @@ export interface SearchResponse {
   filter_description?: string;
   semantic_query?: string;
   results: Food[];
+  secondary_results?: Food[]; // For compound requests
   total: number;
   search_mode: "hybrid" | "semantic" | "keyword" | "no_results";
   message: string;
@@ -127,6 +132,8 @@ export interface SearchResponse {
   cart?: CartWithItems;
   items_added?: CartItem[];
   error?: string;
+  show_checkout_button?: boolean;
+  requires_disambiguation?: boolean;
 }
 
 export interface SendMessageInput {

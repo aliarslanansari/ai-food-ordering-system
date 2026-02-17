@@ -105,6 +105,7 @@ export default function Chat() {
                       onAddToCart={(food, quantity) =>
                         addToCart.mutate({ food, quantity })
                       }
+                      onCheckout={handleCheckout}
                     />
                   ))}
                   {isLoading && <TypingIndicator />}

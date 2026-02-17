@@ -20,7 +20,7 @@ const genai = new GoogleGenAI({
 });
 
 export interface ExtractedIntent {
-  intent: "recommend" | "add_to_cart" | "details" | "checkout";
+  intent: "recommend" | "add_to_cart" | "details" | "checkout" | "disambiguate";
   filters: {
     category?: string | null;
     protein_level?: "high" | "medium" | "low" | null;
@@ -31,8 +31,13 @@ export interface ExtractedIntent {
   };
   semantic_query?: string | null;
   item_reference?: string | null;
+  items?: string[] | null; // Multiple named items for add_to_cart (e.g., ["Grilled Chicken", "Caesar Salad"])
+  quantity?: number | null; // Quantity for add_to_cart (e.g., 2 for "add two pizzas")
   message?: string | null; // Dynamic message to show to user
   follow_up_question?: string | null; // Follow-up question to suggest add-ons/sides
+  requires_disambiguation?: boolean | null; // True when add_to_cart needs clarification
+  secondary_intent?: "recommend" | null; // For compound requests (e.g., "add that and show me naan")
+  secondary_query?: string | null; // Secondary search query for compound requests
 }
 
 /**
@@ -77,7 +82,7 @@ Current user message: "${userMessage}"
 Your job is to convert the CURRENT user message into STRICT JSON following EXACTLY this schema:
 
 {
-  "intent": "recommend" | "add_to_cart" | "details" | "checkout",
+  "intent": "recommend" | "add_to_cart" | "details" | "checkout" | "disambiguate",
   "filters": {
     "category": string | null,
     "protein_level": "high" | "medium" | "low" | null,
@@ -88,8 +93,13 @@ Your job is to convert the CURRENT user message into STRICT JSON following EXACT
   },
   "semantic_query": string | null,
   "item_reference": string | null,
+  "items": string[] | null,
+  "quantity": number | null,
   "message": string | null,
-  "follow_up_question": string | null
+  "follow_up_question": string | null,
+  "requires_disambiguation": boolean | null,
+  "secondary_intent": "recommend" | null,
+  "secondary_query": string | null
 }
 
 Rules:
@@ -104,9 +114,13 @@ Rules:
 - If user asks for more info about a dish → intent = "details".
 - If user says checkout/pay → intent = "checkout".
 - For semantic_query: extract the core food preference query (e.g., "chicken high protein low carb" from "I need chicken-based lunch, high protein, low carb")
-- For item_reference: capture references like "that", "it", "the first one", "both"
+- For item_reference: capture references like "that", "it", "the first one", "both", "those"
+- For items: When user names multiple specific items to add (e.g., "Add the Grilled Chicken, Caesar Salad, and Orange Juice"), extract as array of item names: ["Grilled Chicken", "Caesar Salad", "Orange Juice"]. Set to null for single items or references.
+- For quantity: Extract number when user says "add two pizzas" or "get 3 of those". Set to null if not specified (defaults to 1).
 - For message: Generate a friendly, dynamic message for "recommend" intent based on what the user is looking for. Be conversational and mention their specific preferences if any (e.g., "Here are some delicious vegetarian options for you!" or "I found some great high-protein chicken dishes!"). Set to null for other intents.
 - For follow_up_question: For "recommend" intent, generate a conversational question suggesting sides, drinks, or add-ons that would complement the main dishes shown. Examples: "Would you like to add any sides or drinks?" or "Can I suggest some fresh juices or salads to go with that?" Set to null for other intents or if user is already looking for sides/drinks.
+- For requires_disambiguation: Set to TRUE when user wants to add something but there's no conversation context AND the request is ambiguous (e.g., "Add a pizza" without prior context). In this case, intent should be "disambiguate" and semantic_query should contain what to search for. Set to null otherwise.
+- For secondary_intent and secondary_query: When user combines requests like "add that and show me naan" or "I want that with some bread", set secondary_intent="recommend" and secondary_query with the additional item search (e.g., "naan", "bread"). Set to null for simple requests.
 
 Examples:
 
@@ -157,8 +171,57 @@ User: "Add two large pizzas to my cart"
   },
   "semantic_query": null,
   "item_reference": "two large pizzas",
+  "items": null,
+  "quantity": 2,
   "message": null,
-  "follow_up_question": null
+  "follow_up_question": null,
+  "requires_disambiguation": null,
+  "secondary_intent": null,
+  "secondary_query": null
+}
+
+User: "Add the Grilled Chicken Breast, Caesar Salad, and Orange Juice to my cart"
+{
+  "intent": "add_to_cart",
+  "filters": {
+    "category": null,
+    "protein_level": null,
+    "carb_level": null,
+    "vegetarian": null,
+    "spiceLevel": null,
+    "budget": null
+  },
+  "semantic_query": null,
+  "item_reference": null,
+  "items": ["Grilled Chicken Breast", "Caesar Salad", "Orange Juice"],
+  "quantity": null,
+  "message": null,
+  "follow_up_question": null,
+  "requires_disambiguation": null,
+  "secondary_intent": null,
+  "secondary_query": null
+}
+
+User: "Add a pizza" (no prior context about pizzas)
+{
+  "intent": "disambiguate",
+  "filters": {
+    "category": null,
+    "protein_level": null,
+    "carb_level": null,
+    "vegetarian": null,
+    "spiceLevel": null,
+    "budget": null
+  },
+  "semantic_query": "pizza",
+  "item_reference": "a pizza",
+  "items": null,
+  "quantity": 1,
+  "message": "We have several pizzas! Here are our options:",
+  "follow_up_question": "Which one would you like?",
+  "requires_disambiguation": true,
+  "secondary_intent": null,
+  "secondary_query": null
 }
 
 User: "Tell me more about that" (after being shown items)
@@ -174,8 +237,13 @@ User: "Tell me more about that" (after being shown items)
   },
   "semantic_query": null,
   "item_reference": "that",
+  "items": null,
+  "quantity": null,
   "message": null,
-  "follow_up_question": null
+  "follow_up_question": null,
+  "requires_disambiguation": null,
+  "secondary_intent": null,
+  "secondary_query": null
 }
 
 User: "Show me more like this"
@@ -191,8 +259,57 @@ User: "Show me more like this"
   },
   "semantic_query": "similar items",
   "item_reference": "this",
+  "items": null,
+  "quantity": null,
   "message": "Here are some similar dishes you might enjoy!",
-  "follow_up_question": "Would you like any sides or beverages with these?"
+  "follow_up_question": "Would you like any sides or beverages with these?",
+  "requires_disambiguation": null,
+  "secondary_intent": null,
+  "secondary_query": null
+}
+
+User: "The Palak Paneer looks good. Can I get it with naan?" (compound request)
+{
+  "intent": "add_to_cart",
+  "filters": {
+    "category": null,
+    "protein_level": null,
+    "carb_level": null,
+    "vegetarian": null,
+    "spiceLevel": null,
+    "budget": null
+  },
+  "semantic_query": null,
+  "item_reference": "Palak Paneer",
+  "items": null,
+  "quantity": 1,
+  "message": null,
+  "follow_up_question": null,
+  "requires_disambiguation": null,
+  "secondary_intent": "recommend",
+  "secondary_query": "naan"
+}
+
+User: "Add two of those" (referring to previously shown items)
+{
+  "intent": "add_to_cart",
+  "filters": {
+    "category": null,
+    "protein_level": null,
+    "carb_level": null,
+    "vegetarian": null,
+    "spiceLevel": null,
+    "budget": null
+  },
+  "semantic_query": null,
+  "item_reference": "those",
+  "items": null,
+  "quantity": 2,
+  "message": null,
+  "follow_up_question": null,
+  "requires_disambiguation": null,
+  "secondary_intent": null,
+  "secondary_query": null
 }
 
 Now process this user message:
@@ -228,9 +345,13 @@ Now process this user message:
     // Validate the parsed result
     if (
       !parsed.intent ||
-      !["recommend", "add_to_cart", "details", "checkout"].includes(
-        parsed.intent,
-      )
+      ![
+        "recommend",
+        "add_to_cart",
+        "details",
+        "checkout",
+        "disambiguate",
+      ].includes(parsed.intent)
     ) {
       throw new Error("Invalid intent extracted");
     }

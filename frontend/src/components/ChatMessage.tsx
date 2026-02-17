@@ -2,19 +2,25 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { FoodCardGrid } from "./FoodCardGrid";
-import { ShoppingCart, User, Bot, Loader2 } from "lucide-react";
+import { ShoppingCart, User, Bot, Loader2, CreditCard } from "lucide-react";
 import type { ChatMessage as ChatMessageType, Food } from "@/types";
 
 interface ChatMessageProps {
   message: ChatMessageType;
   onAddToCart: (food: Food, quantity: number) => void;
+  onCheckout?: () => void;
 }
 
-export function ChatMessage({ message, onAddToCart }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  onAddToCart,
+  onCheckout,
+}: ChatMessageProps) {
   const isUser = message.role === "user";
 
-  // Text-only message
+  // Text-only message (or with checkout button)
   if (!message.foods && !message.cartSummary) {
     return (
       <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
@@ -33,18 +39,31 @@ export function ChatMessage({ message, onAddToCart }: ChatMessageProps) {
             )}
           </AvatarFallback>
         </Avatar>
-        <div
-          className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-3 sm:px-4 py-2 ${
-            isUser ? "bg-orange-600 text-white" : "bg-stone-100 text-stone-900"
-          }`}
-        >
-          <p className="text-sm">{message.content}</p>
+        <div className="flex-1 space-y-2">
+          <div
+            className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-3 sm:px-4 py-2 ${
+              isUser
+                ? "bg-orange-600 text-white"
+                : "bg-stone-100 text-stone-900"
+            }`}
+          >
+            <p className="text-sm whitespace-pre-line">{message.content}</p>
+          </div>
+          {message.showCheckoutButton && onCheckout && (
+            <Button
+              onClick={onCheckout}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Proceed to Checkout
+            </Button>
+          )}
         </div>
       </div>
     );
   }
 
-  // Message with food recommendations
+  // Message with food recommendations (including compound requests)
   if (message.foods && message.foods.length > 0) {
     return (
       <div className="flex gap-3">
@@ -54,30 +73,54 @@ export function ChatMessage({ message, onAddToCart }: ChatMessageProps) {
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
-          <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2 max-w-[90%] sm:max-w-[80%]">
-            <p className="text-sm">{message.content}</p>
+          <div
+            className={`rounded-lg px-3 sm:px-4 py-2 max-w-[90%] sm:max-w-[80%] ${
+              message.requiresDisambiguation
+                ? "bg-orange-50 border border-orange-200"
+                : "bg-stone-100"
+            }`}
+          >
+            <p className="text-sm whitespace-pre-line">{message.content}</p>
           </div>
           <FoodCardGrid
             foods={message.foods}
             onAddToCart={onAddToCart}
             columns={2}
           />
+          {/* Secondary results for compound requests */}
+          {message.secondaryFoods && message.secondaryFoods.length > 0 && (
+            <>
+              <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2 max-w-[90%] sm:max-w-[80%]">
+                <p className="text-sm font-medium">You might also like:</p>
+              </div>
+              <FoodCardGrid
+                foods={message.secondaryFoods}
+                onAddToCart={onAddToCart}
+                columns={2}
+              />
+            </>
+          )}
           {message.followUpQuestion && (
             <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2 max-w-[90%] sm:max-w-[80%]">
               <p className="text-sm">{message.followUpQuestion}</p>
             </div>
+          )}
+          {message.showCheckoutButton && onCheckout && (
+            <Button
+              onClick={onCheckout}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Proceed to Checkout
+            </Button>
           )}
         </div>
       </div>
     );
   }
 
-  // Cart summary message
-  if (
-    message.cartSummary &&
-    message.cartSummary.items &&
-    message.cartSummary.items.length > 0
-  ) {
+  // Add to cart intent: show message, cart summary, and followup
+  if (message.intent === "add_to_cart" && message.cartSummary) {
     const cart = message.cartSummary;
     return (
       <div className="flex gap-3">
@@ -86,35 +129,69 @@ export function ChatMessage({ message, onAddToCart }: ChatMessageProps) {
             <Bot className="h-4 w-4" />
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 max-w-[90%] sm:max-w-md">
-          <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2 mb-2 sm:mb-3">
+        <div className="flex-1 max-w-[90%] sm:max-w-md space-y-2">
+          <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2">
             <p className="text-sm">{message.content}</p>
           </div>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs sm:text-sm flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4" />
-                Cart Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {cart.items?.map((item) => (
-                <div key={item.id} className="flex justify-between text-sm">
-                  <span>
-                    {item.food_name} x{item.quantity}
-                  </span>
-                  <span className="font-medium">
-                    ₹{(item.price * item.quantity).toFixed(2)}
-                  </span>
+          {cart.items && cart.items.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs sm:text-sm flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4" />
+                  Cart Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {cart.items.map((item) => (
+                  <div key={item.id} className="flex justify-between text-sm">
+                    <span>
+                      {item.food_name} x{item.quantity}
+                    </span>
+                    <span className="font-medium">
+                      ₹{(item.price * item.quantity).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+                <Separator />
+                <div className="flex justify-between font-semibold">
+                  <span>Total</span>
+                  <span>₹{cart.total.toFixed(2)}</span>
                 </div>
-              ))}
-              <Separator />
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span>₹{cart.total.toFixed(2)}</span>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
+          {message.followUpQuestion && (
+            <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2">
+              <p className="text-sm">{message.followUpQuestion}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Checkout intent: show checkout button that opens cart side sheet
+  if (message.intent === "checkout") {
+    return (
+      <div className="flex gap-3">
+        <Avatar className="h-8 w-8 bg-stone-600">
+          <AvatarFallback className="bg-stone-600 text-white">
+            <Bot className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 space-y-2">
+          <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2 max-w-[90%] sm:max-w-[80%]">
+            <p className="text-sm whitespace-pre-line">{message.content}</p>
+          </div>
+          {onCheckout && (
+            <Button
+              onClick={onCheckout}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Proceed to Checkout
+            </Button>
+          )}
         </div>
       </div>
     );

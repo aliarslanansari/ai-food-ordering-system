@@ -47,4 +47,9 @@ export interface SearchResponse {
   item?: any;
   // For checkout intent
   next_step?: string;
+  show_checkout_button?: boolean; // Show checkout button in chat
+  // For disambiguation intent
+  requires_disambiguation?: boolean;
+  // For compound requests
+  secondary_results?: any[];
 }
