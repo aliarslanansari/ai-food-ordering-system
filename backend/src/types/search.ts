@@ -9,6 +9,14 @@ export interface CartSummary {
   has_cart: boolean;
   item_count: number;
   total: number;
+  items?: {
+    id: string;
+    food_id: string;
+    food_name: string;
+    quantity: number;
+    price: number;
+    added_at: number;
+  }[];
 }
 
 export interface SearchResponse {

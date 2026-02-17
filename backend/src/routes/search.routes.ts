@@ -137,6 +137,7 @@ router.post("/", optionalAuth, async (req, res) => {
                       has_cart: true,
                       item_count: cartWithItems.item_count,
                       total: cartWithItems.total,
+                      items: cartWithItems.items,
                     }
                   : { has_cart: false, item_count: 0, total: 0 };
 
@@ -219,7 +220,7 @@ router.post("/", optionalAuth, async (req, res) => {
         const itemList = addedItems
           .map((i) => `• ${i.food_name} - ₹${i.price} x${i.quantity}`)
           .join("\n");
-        const message = `Perfect! I've added:\n${itemList}\nTotal: ₹${totalAmount.toFixed(2)}`;
+        const message = `Perfect! I've added:\n${itemList} to the cart`;
 
         const response: SearchResponse = {
           session_id: sessionId,
@@ -235,6 +236,7 @@ router.post("/", optionalAuth, async (req, res) => {
                 has_cart: true,
                 item_count: cartWithItems.item_count,
                 total: cartWithItems.total,
+                items: cartWithItems.items,
               }
             : { has_cart: false, item_count: 0, total: 0 },
           show_checkout_button: true,
@@ -346,6 +348,7 @@ router.post("/", optionalAuth, async (req, res) => {
             has_cart: true,
             item_count: cartWithItems.item_count,
             total: cartWithItems.total,
+            items: cartWithItems.items,
           }
         : { has_cart: false, item_count: 0, total: 0 };
 
@@ -401,6 +404,7 @@ router.post("/", optionalAuth, async (req, res) => {
           has_cart: true,
           item_count: cartWithItems.item_count,
           total: cartWithItems.total,
+          items: cartWithItems.items,
         },
         next_step: "Please provide delivery details",
         show_checkout_button: true,
@@ -495,6 +499,7 @@ router.post("/", optionalAuth, async (req, res) => {
           has_cart: true,
           item_count: cartWithItems.item_count,
           total: cartWithItems.total,
+          items: cartWithItems.items,
         }
       : {
           has_cart: false,

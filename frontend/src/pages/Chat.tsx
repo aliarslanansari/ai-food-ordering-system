@@ -22,6 +22,7 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const messages = useChatStore((state) => state.messages);
+  console.log({ messages });
   const isLoading = useChatStore((state) => state.isLoading);
   const session_id = useChatStore((state) => state.session_id);
 

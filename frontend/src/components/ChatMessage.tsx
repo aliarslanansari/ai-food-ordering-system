@@ -1,10 +1,9 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { FoodCardGrid } from "./FoodCardGrid";
-import { ShoppingCart, User, Bot, Loader2, CreditCard } from "lucide-react";
+import { CartSummary } from "./CartSummary";
+import { User, Bot, Loader2, CreditCard } from "lucide-react";
 import type { ChatMessage as ChatMessageType, Food } from "@/types";
 
 interface ChatMessageProps {
@@ -20,36 +19,95 @@ export function ChatMessage({
 }: ChatMessageProps) {
   const isUser = message.role === "user";
 
-  // Text-only message (or with checkout button)
-  if (!message.foods && !message.cartSummary) {
+  // User messages - always render as text bubble
+  if (isUser) {
     return (
-      <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
-        <Avatar
-          className={`h-8 w-8 ${isUser ? "bg-orange-600" : "bg-stone-600"}`}
-        >
-          <AvatarFallback
-            className={
-              isUser ? "bg-orange-600 text-white" : "bg-stone-600 text-white"
-            }
-          >
-            {isUser ? (
-              <User className="h-4 w-4" />
-            ) : (
-              <Bot className="h-4 w-4" />
-            )}
+      <div className="flex gap-3 flex-row-reverse">
+        <Avatar className="h-8 w-8 bg-orange-600">
+          <AvatarFallback className="bg-orange-600 text-white">
+            <User className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 flex justify-end">
+          <div className="max-w-[85%] sm:max-w-[80%] rounded-lg px-3 sm:px-4 py-2 bg-orange-600 text-white">
+            <p className="text-sm whitespace-pre-line">{message.content}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Add to cart intent: show message, cart summary with checkout button, and followup
+  if (message.intent === "add_to_cart" && message.cartSummary) {
+    const cart = message.cartSummary;
+    return (
+      <div className="flex gap-3">
+        <Avatar className="h-8 w-8 bg-stone-600">
+          <AvatarFallback className="bg-stone-600 text-white">
+            <Bot className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 max-w-[90%] sm:max-w-md space-y-2">
+          <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2">
+            <p className="text-sm">{message.content}</p>
+          </div>
+          <CartSummary
+            cart={cart}
+            onCheckout={onCheckout}
+            showCheckoutButton={true}
+          />
+          {message.followUpQuestion && (
+            <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2">
+              <p className="text-sm">{message.followUpQuestion}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Checkout intent: show cart summary with checkout button
+  if (message.intent === "checkout" && message.cartSummary) {
+    return (
+      <div className="flex gap-3">
+        <Avatar className="h-8 w-8 bg-stone-600">
+          <AvatarFallback className="bg-stone-600 text-white">
+            <Bot className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 max-w-[90%] sm:max-w-md space-y-2">
+          <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2">
+            <p className="text-sm whitespace-pre-line">{message.content}</p>
+          </div>
+          <CartSummary
+            cart={message.cartSummary}
+            onCheckout={onCheckout}
+            showCheckoutButton={true}
+          />
+          {message.followUpQuestion && (
+            <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2">
+              <p className="text-sm">{message.followUpQuestion}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Checkout intent without cart summary (fallback)
+  if (message.intent === "checkout") {
+    return (
+      <div className="flex gap-3">
+        <Avatar className="h-8 w-8 bg-stone-600">
+          <AvatarFallback className="bg-stone-600 text-white">
+            <Bot className="h-4 w-4" />
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-2">
-          <div
-            className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-3 sm:px-4 py-2 ${
-              isUser
-                ? "bg-orange-600 text-white"
-                : "bg-stone-100 text-stone-900"
-            }`}
-          >
+          <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2 max-w-[90%] sm:max-w-[80%]">
             <p className="text-sm whitespace-pre-line">{message.content}</p>
           </div>
-          {message.showCheckoutButton && onCheckout && (
+          {onCheckout && (
             <Button
               onClick={onCheckout}
               className="bg-orange-600 hover:bg-orange-700 text-white"
@@ -119,85 +177,30 @@ export function ChatMessage({
     );
   }
 
-  // Add to cart intent: show message, cart summary, and followup
-  if (message.intent === "add_to_cart" && message.cartSummary) {
-    const cart = message.cartSummary;
-    return (
-      <div className="flex gap-3">
-        <Avatar className="h-8 w-8 bg-stone-600">
-          <AvatarFallback className="bg-stone-600 text-white">
-            <Bot className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1 max-w-[90%] sm:max-w-md space-y-2">
-          <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2">
-            <p className="text-sm">{message.content}</p>
-          </div>
-          {cart.items && cart.items.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs sm:text-sm flex items-center gap-2">
-                  <ShoppingCart className="h-4 w-4" />
-                  Cart Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {cart.items.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm">
-                    <span>
-                      {item.food_name} x{item.quantity}
-                    </span>
-                    <span className="font-medium">
-                      ₹{(item.price * item.quantity).toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-                <Separator />
-                <div className="flex justify-between font-semibold">
-                  <span>Total</span>
-                  <span>₹{cart.total.toFixed(2)}</span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          {message.followUpQuestion && (
-            <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2">
-              <p className="text-sm">{message.followUpQuestion}</p>
-            </div>
-          )}
+  // Text-only assistant message
+  return (
+    <div className="flex gap-3">
+      <Avatar className="h-8 w-8 bg-stone-600">
+        <AvatarFallback className="bg-stone-600 text-white">
+          <Bot className="h-4 w-4" />
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1 space-y-2">
+        <div className="max-w-[85%] sm:max-w-[80%] rounded-lg px-3 sm:px-4 py-2 bg-stone-100 text-stone-900">
+          <p className="text-sm whitespace-pre-line">{message.content}</p>
         </div>
+        {message.showCheckoutButton && onCheckout && (
+          <Button
+            onClick={onCheckout}
+            className="bg-orange-600 hover:bg-orange-700 text-white"
+          >
+            <CreditCard className="h-4 w-4 mr-2" />
+            Proceed to Checkout
+          </Button>
+        )}
       </div>
-    );
-  }
-
-  // Checkout intent: show checkout button that opens cart side sheet
-  if (message.intent === "checkout") {
-    return (
-      <div className="flex gap-3">
-        <Avatar className="h-8 w-8 bg-stone-600">
-          <AvatarFallback className="bg-stone-600 text-white">
-            <Bot className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1 space-y-2">
-          <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2 max-w-[90%] sm:max-w-[80%]">
-            <p className="text-sm whitespace-pre-line">{message.content}</p>
-          </div>
-          {onCheckout && (
-            <Button
-              onClick={onCheckout}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
-            >
-              <CreditCard className="h-4 w-4 mr-2" />
-              Proceed to Checkout
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }
 
 // Typing indicator component
