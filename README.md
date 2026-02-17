@@ -37,6 +37,48 @@ docker compose down
 
 ---
 
+## Tech Stack & Libraries
+
+### Backend Dependencies
+
+| Library | Purpose | Version |
+|---------|---------|---------|
+| **Express.js** | Web framework for REST API | ^5.2.1 |
+| **Mongoose** | MongoDB ODM for data modeling | ^9.2.1 |
+| **@google/genai** | Google Gemini AI SDK for embeddings & chat | ^1.41.0 |
+| **bcrypt** | Password hashing with salt | ^6.0.0 |
+| **jsonwebtoken** | JWT token generation & verification | ^9.0.3 |
+| **cors** | Cross-Origin Resource Sharing middleware | ^2.8.6 |
+| **axios** | HTTP client for external API calls | ^1.13.5 |
+| **imagekit** | Image CDN integration for food photos | ^6.0.0 |
+| **env-cmd** | Environment variable management | ^11.0.0 |
+| **TypeScript** | Type-safe JavaScript development | ^5.9.3 |
+
+### Frontend Dependencies
+
+| Library | Purpose | Version |
+|---------|---------|---------|
+| **React 19** | UI component library | ^19.2.0 |
+| **React Router DOM** | Client-side routing | ^7.13.0 |
+| **Vite** | Build tool & dev server | ^7.3.1 |
+| **Tailwind CSS 4** | Utility-first CSS framework | ^4.1.18 |
+| **Zustand** | Lightweight state management | ^5.0.11 |
+| **TanStack Query** | Server state caching & synchronization | ^5.90.21 |
+| **Formik** | Form handling & validation | ^2.4.9 |
+| **Yup** | Schema validation for forms | ^1.7.1 |
+
+### Infrastructure & DevOps
+
+| Technology | Purpose |
+|------------|---------|
+| **Docker** | Containerization for consistent deployments |
+| **Docker Compose** | Multi-container orchestration |
+| **Nginx** | Reverse proxy & static file serving |
+| **MongoDB** | NoSQL document database |
+| **ImageKit CDN** | Image optimization & delivery |
+
+---
+
 ## Technical Requirements Document (TRD)
 
 ### 1. System Architecture
@@ -166,38 +208,82 @@ db.orders.createIndex({ user_id: 1, created_at: -1 });
 
 ### 3. AI/ML Architecture
 
-#### 3.1 Intent Extraction Flow
+The AI/ML layer is the core intelligence of the food ordering system, enabling natural language understanding, semantic search, and personalized recommendations. It combines Google's Gemini models with custom retrieval algorithms to deliver a conversational food discovery experience.
+
+#### 3.1 System Overview
+
+```mermaid
+flowchart TB
+    subgraph Input["📝 User Input Layer"]
+        UI["Natural Language Query<br/>'Show me spicy chicken under ₹500'"]
+    end
+    
+    subgraph Intelligence["🧠 AI Processing Layer"]
+        Intent["Intent Classification<br/>(recommend, add_to_cart, checkout, etc.)"]
+        NER["Named Entity Recognition<br/>(food items, prices, dietary prefs)"]
+        Context["Context Management<br/>(conversation history, session state)"]
+    end
+    
+    subgraph Retrieval["🔍 Retrieval Layer"]
+        Semantic["Semantic Search<br/>(embedding similarity)"]
+        Structured["Structured Filtering<br/>(price, category, diet type)"]
+        Hybrid["Hybrid Scoring<br/>(combine semantic + keyword)"]
+    end
+    
+    subgraph Output["💬 Response Generation"]
+        NLG["Natural Language Response<br/>(friendly, contextual)"]
+        Results["Food Results<br/>(ranked recommendations)"]
+    end
+    
+    UI --> Intent
+    UI --> NER
+    Intent --> Context
+    NER --> Context
+    Context --> Semantic
+    Context --> Structured
+    Semantic --> Hybrid
+    Structured --> Hybrid
+    Hybrid --> NLG
+    Hybrid --> Results
+    
+    style Intelligence fill:#e3f2fd,stroke:#333,stroke-width:2px
+    style Retrieval fill:#fff3e0,stroke:#333,stroke-width:2px
+```
+
+#### 3.2 Intent Extraction Flow
+
+The system uses a multi-stage pipeline to understand user intent from natural language:
 
 ```mermaid
 flowchart LR
     A(["👤 User Input<br/>'I want spicy vegetarian curries under ₹500'"]) --> B
     
     subgraph Step1["📋 Step 1: Context Assembly"]
-        B["Load Conversation History<br/>Last 5 messages + Current input"]
+        B["Load Conversation History<br/>Last 5 messages + Current input<br/>Session context (cart items, preferences)"]
     end
     
     B --> C
     
     subgraph Step2["🤖 Step 2: Gemini API Call"]
-        C["Gemini 2.0 Flash<br/>Extract intent & filters"]
+        C["Gemini 2.0 Flash<br/>Extract intent & filters<br/>System prompt with food domain context"]
     end
     
     C --> D
     
     subgraph Step3["📄 Step 3: Intent Parsing"]
-        D["JSON Output<br/>intent: recommend<br/>filters: {...}<br/>semantic_query: ..."]
+        D["JSON Output<br/>{<br/>  intent: 'recommend',<br/>  filters: {<br/>    vegetarian: true,<br/>    spiceLevel: 'high',<br/>    maxPrice: 500<br/>  },<br/>  semantic_query: 'spicy vegetarian curry'<br/>}"]
     end
     
     D --> E
     
     subgraph Step4["⚙️ Step 4: Filter Normalization"]
-        E["Map to structured filters<br/>spiceLevel → numeric<br/>budget → maxPrice<br/>protein_level → protein_min"]
+        E["Map to structured filters<br/>• spiceLevel → 'mild' | 'medium' | 'spicy' (string)<br/>• budget → maxPrice (INR)<br/>• protein_level → protein_min (grams, calculated from data stats)<br/>• carb_level → carbs_max (grams, calculated from data stats)<br/>• vegetarian → boolean"]
     end
     
     E --> F
     
     subgraph Step5["🎯 Step 5: Reference Resolution"]
-        F["Resolve 'that', 'it'<br/>→ specific food items"]
+        F["AI-Powered Resolution via Gemini<br/>• 'that first one' → resolved with confidence score<br/>• 'both' → multiple item indices<br/>• 'the spicy one' → attribute-based matching<br/>Returns: {indices, confidence, reasoning}"]
     end
     
     F --> G(["✅ Structured Query<br/>Ready for Search"])
@@ -206,52 +292,287 @@ flowchart LR
     style G fill:#9f9,stroke:#333,stroke-width:2px
 ```
 
-#### 3.2 Hybrid Search Algorithm
+**Intent Types Supported:**
+
+| Intent | Description | Example Query |
+|--------|-------------|---------------|
+| `recommend` | Suggest food items based on preferences | "Show me spicy biryanis" |
+| `add_to_cart` | Add item(s) to shopping cart | "Add that biryani to my cart" |
+| `details` | Request more information about a dish | "Tell me more about the butter chicken" |
+| `checkout` | Proceed to order placement | "I'm ready to checkout" |
+| `disambiguate` | Clarify ambiguous requests | "Add a pizza" (when multiple pizzas exist) |
+
+**Additional Intent Fields:**
+
+| Field | Purpose | Example |
+|-------|---------|---------|
+| `items` | Multiple named items for batch add | `["Grilled Chicken", "Caesar Salad"]` |
+| `quantity` | Number of items to add | `2` for "add two pizzas" |
+| `item_reference` | Reference to previously shown items | "that", "the first one", "both" |
+| `message` | Dynamic response message for recommendations | "Here are delicious vegetarian options!" |
+| `follow_up_question` | Suggest add-ons/sides | "Would you like drinks with that?" |
+| `secondary_intent` | For compound requests | "add that AND show me naan" |
+| `requires_disambiguation` | Flag when clarification needed | `true` when ambiguous without context |
+
+#### 3.3 Hybrid Search Algorithm
+
+The search system uses a two-stage approach: structured filtering followed by semantic ranking:
 
 ```mermaid
 flowchart LR
     A(["🔍 Query<br/>'spicy chicken dishes'"]) --> B
     
     subgraph Step1["1️⃣ Generate Embedding"]
-        B["Gemini Embedding-001<br/>768-dim vector"]
+        B["Gemini Embedding-001<br/>768-dim vector representation<br/>Captures semantic meaning"]
     end
     
     B --> C
     
     subgraph Step2["2️⃣ Structured Filtering"]
-        C["Apply Filters<br/>category = 'chicken'<br/>spiceLevel = 'high'<br/>type = 'Non-Vegetarian'"]
+        C["Pre-filter Food Database<br/>• category = 'chicken'<br/>• spiceLevel = 'high'<br/>• vegetarian = false<br/>• maxPrice ≤ budget<br/>• protein_min ≥ threshold"]
     end
     
     C --> D
     
     subgraph Step3["3️⃣ Semantic Scoring"]
-        D["Cosine Similarity<br/>query_embedding ↔ food_embedding"]
+        D["Cosine Similarity Calculation<br/>query_embedding · food_embedding<br/>─────────────────────────────<br/>||query|| × ||food||<br/><br/>Range: -1 to 1 (1 = identical)"]
     end
     
     D --> E
     
-    subgraph Step4["4️⃣ Combined Scoring"]
-        E["Final Score =<br/>(semantic × 0.7) +<br/>(keyword × 0.3)"]
+    subgraph Step4["4️⃣ Ranking"]
+        E["Sort by Cosine Similarity DESC<br/>Return Top K = 5"]
     end
     
-    E --> F
-    
-    subgraph Step5["5️⃣ Ranking"]
-        F["Sort DESC<br/>Return Top K = 5"]
-    end
-    
-    F --> G(["📊 Results<br/>Ranked Food Items"])
+    E --> F(["📊 Results<br/>Ranked Food Items"])
     
     style A fill:#f9f,stroke:#333,stroke-width:2px
-    style G fill:#9f9,stroke:#333,stroke-width:2px
+    style F fill:#9f9,stroke:#333,stroke-width:2px
 ```
 
-#### 3.3 AI Models Configuration
+**Algorithm Details:**
 
-| Model | Purpose | Parameters |
-|-------|---------|------------|
-| **gemini-embedding-001** | Text embeddings | 768 dimensions |
-| **gemini-2.0-flash** | Intent extraction | Temperature: 0.1, Max tokens: 1024 |
+```typescript
+// Stage 1: Structured Filtering
+let foods = getFoods();
+foods = foods.filter(f => matchesCategory(f, filters.category));
+foods = foods.filter(f => f.nutrition.protein >= filters.protein_min);
+foods = foods.filter(f => f.nutrition.carbs <= filters.carbs_max);
+foods = foods.filter(f => f.isVegetarian === filters.vegetarian);
+foods = foods.filter(f => f.spiceLevel === filters.spiceLevel);
+foods = foods.filter(f => f.price <= filters.maxPrice);
+
+// Stage 2: Semantic Ranking (Pure Cosine Similarity)
+const scoredFoods = foods.map(food => ({
+  food,
+  score: cosineSimilarity(queryEmbedding, foodEmbedding)
+}));
+
+// Sort and return top K
+scoredFoods.sort((a, b) => b.score - a.score);
+return scoredFoods.slice(0, topK);
+```
+
+**Fallback Search Methods:**
+
+| Method | When Used | Approach |
+|--------|-----------|----------|
+| `hybridSearch` | Default | Structured filters + cosine similarity |
+| `semanticOnlySearch` | When filters too restrictive | Cosine similarity only, no pre-filtering |
+| `keywordSearch` | When embeddings unavailable | TF-IDF style keyword matching on name/category/description |
+
+#### 3.4 Embedding Strategy
+
+Food items are converted to vector embeddings for semantic search:
+
+```mermaid
+flowchart TB
+    subgraph FoodItem["🍽️ Food Item"]
+        Name["Name: Butter Chicken"]
+        Tags["Tags: [chicken, curry, spicy, creamy]"]
+        Desc["Description: Tender chicken..."]
+        Category["Category: Main Course"]
+    end
+    
+    subgraph TextGen["📝 Text Generation"]
+        Template["Template:<br/>Name: {name}<br/>Category: {category}<br/>Tags: {tags}<br/>Description: {desc}<br/>Dietary: {type}<br/>Spice: {level}"]
+    end
+    
+    subgraph Embedding["🔢 Embedding Generation"]
+        Gemini["Gemini Embedding-001 API"]
+        Vector["768-dim Vector<br/>[-0.023, 0.156, ..., 0.089]"]
+    end
+    
+    subgraph Storage["💾 Storage"]
+        JSON["embeddings.json<br/>{id: vector} mapping"]
+        Memory["In-Memory Cache<br/>(loaded at startup)"]
+    end
+    
+    Name --> Template
+    Tags --> Template
+    Desc --> Template
+    Category --> Template
+    Template --> Gemini
+    Gemini --> Vector
+    Vector --> JSON
+    JSON --> Memory
+    
+    style Embedding fill:#e3f2fd,stroke:#333,stroke-width:2px
+    style Storage fill:#e8f5e9,stroke:#333,stroke-width:2px
+```
+
+**Embedding Text Template:**
+```
+Food Item: {name}
+Category: {category}
+Cuisine: {cuisine}
+Type: {vegetarian/non-vegetarian/vegan}
+Spice Level: {1-5}/5
+Tags: {tag1, tag2, tag3}
+Description: {description}
+Price: ₹{price}
+Protein: {protein}g
+```
+
+#### 3.5 Context Management
+
+The system maintains conversation context for multi-turn interactions:
+
+```mermaid
+flowchart TB
+    subgraph Session["💬 Session Context"]
+        SID["Session ID"]
+        LastItems["Last Mentioned Items<br/>[food_id1, food_id2]"]
+        LastQuery["Last Search Query"]
+        CartRef["Cart Reference"]
+        Preferences["User Preferences<br/>{dietary, spice, budget}"]
+    end
+    
+    subgraph Messages["📝 Message History"]
+        M1["User: Show me biryanis"]
+        M2["AI: Here are 5 biryanis..."]
+        M3["User: Add that first one to cart"]
+    end
+    
+    subgraph Resolution["🎯 Reference Resolution"]
+        Ref["'that first one' →<br/>lastMentionedItems[0]"]
+    end
+    
+    SID --> Messages
+    Messages --> LastItems
+    LastItems --> Resolution
+    LastQuery --> Resolution
+    CartRef --> Resolution
+    Preferences --> Resolution
+    
+    style Session fill:#f3e5f5,stroke:#333,stroke-width:2px
+    style Resolution fill:#fff3e0,stroke:#333,stroke-width:2px
+```
+
+**Context Persistence:**
+- Session contexts stored in MongoDB (`session_contexts` collection)
+- Last 5 messages included in intent extraction prompts
+- Automatic cleanup of inactive sessions (configurable TTL)
+
+#### 3.6 AI Models Configuration
+
+| Model | Purpose | Configuration | Cost Optimization |
+|-------|---------|---------------|-----------------|
+| **gemini-embedding-001** | Text embeddings | 768 dimensions, float32 | Pre-computed at build time |
+| **gemini-2.0-flash-exp** | Intent extraction | Default model settings | Response caching for common queries |
+| **gemini-2.0-flash-exp** | Reference resolution | Default model settings | Only called when references detected |
+
+**Model Selection Rationale:**
+- **Flash-exp model**: Experimental flash model optimized for low latency (ideal for real-time chat)
+- **Embedding-001**: Cost-effective, high-quality embeddings for semantic search
+- **Pre-computed embeddings**: Generated at build time via `generate-embeddings.ts` script to avoid runtime API costs
+- **Default settings**: Uses model defaults for temperature and tokens (not explicitly configured)
+
+#### 3.7 Prompt Engineering
+
+**Intent Extraction System Prompt:**
+```
+You are an AI intent extraction engine for a restaurant ordering system.
+
+Available intents: recommend, add_to_cart, details, checkout, disambiguate
+
+Extract these filters when present:
+- category: string (biryani, curry, bread, dessert, etc.)
+- protein_level: "high" | "medium" | "low" (mapped to grams based on data stats)
+- carb_level: "high" | "medium" | "low" (mapped to grams based on data stats)
+- vegetarian: boolean
+- spiceLevel: "mild" | "medium" | "spicy"
+- budget: numeric value in INR
+
+Additional fields to extract:
+- semantic_query: Core food preference query for embedding search
+- item_reference: References like "that", "it", "the first one", "both"
+- items: Array of named items for batch add (e.g., ["Grilled Chicken", "Caesar Salad"])
+- quantity: Number when user says "add two pizzas"
+- message: Friendly dynamic message for "recommend" intent
+- follow_up_question: Suggest add-ons/sides for "recommend" intent
+- requires_disambiguation: true when ambiguous without context
+- secondary_intent: For compound requests like "add that AND show me naan"
+- secondary_query: Additional search query for compound requests
+
+Return STRICT JSON with ALL fields (set to null if not applicable).
+```
+
+**Few-Shot Examples:**
+
+```json
+// User: "I need something for lunch, chicken-based, high protein, low carb"
+{
+  "intent": "recommend",
+  "filters": {
+    "category": "chicken",
+    "protein_level": "high",
+    "carb_level": "low",
+    "vegetarian": false,
+    "spiceLevel": null,
+    "budget": null
+  },
+  "semantic_query": "chicken high protein low carb lunch",
+  "item_reference": null,
+  "items": null,
+  "quantity": null,
+  "message": "Here are some delicious high-protein chicken dishes perfect for your lunch!",
+  "follow_up_question": "Would you like to add any sides, salads, or drinks to complete your meal?",
+  "requires_disambiguation": null,
+  "secondary_intent": null,
+  "secondary_query": null
+}
+
+// User: "Add two of those to my cart"
+{
+  "intent": "add_to_cart",
+  "filters": {},
+  "semantic_query": null,
+  "item_reference": "those",
+  "items": null,
+  "quantity": 2,
+  "message": null,
+  "follow_up_question": null,
+  "requires_disambiguation": null,
+  "secondary_intent": null,
+  "secondary_query": null
+}
+
+// User: "Add that biryani and show me some naan bread"
+{
+  "intent": "add_to_cart",
+  "filters": {},
+  "semantic_query": null,
+  "item_reference": "that biryani",
+  "items": null,
+  "quantity": 1,
+  "message": null,
+  "follow_up_question": null,
+  "requires_disambiguation": null,
+  "secondary_intent": "recommend",
+  "secondary_query": "naan bread"
+}
+```
 
 ### 4. API Design
 
