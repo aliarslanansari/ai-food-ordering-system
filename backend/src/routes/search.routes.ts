@@ -108,7 +108,7 @@ router.post("/", optionalAuth, async (req, res) => {
 
             if (queryEmbedding) {
               const searchResults = hybridSearch(queryEmbedding, {});
-              const topResults = searchResults.slice(0, 5);
+              const topResults = searchResults.slice(0, 5); // Default 5 for disambiguation
 
               if (topResults.length > 0) {
                 // Update session context
@@ -322,7 +322,14 @@ router.post("/", optionalAuth, async (req, res) => {
 
       const disambigFilters = normalizeFilters(intentData.filters);
       const searchResults = hybridSearch(queryEmbedding, disambigFilters);
-      const topResults = searchResults.slice(0, 5);
+      // Use requested limit: allow 1 if explicitly requested, otherwise min 2, max 6
+      const hasExplicitLimit =
+        intentData.limit !== null && intentData.limit !== undefined;
+      const requestedLimit = hasExplicitLimit ? intentData.limit! : 5;
+      const resultLimit = hasExplicitLimit
+        ? Math.min(6, Math.max(1, requestedLimit)) // Allow 1 if explicitly requested
+        : Math.min(6, Math.max(2, requestedLimit)); // Default min 2 when not specified
+      const topResults = searchResults.slice(0, resultLimit);
 
       if (topResults.length > 0) {
         const itemIds = topResults.map((r) => r.id);
@@ -467,7 +474,7 @@ router.post("/", optionalAuth, async (req, res) => {
         secondaryResults = hybridSearch(secondaryEmbedding, {});
         if (secondaryResults.length > 0) {
           // Add secondary results to context as well
-          const secondaryIds = secondaryResults.slice(0, 5).map((r) => r.id);
+          const secondaryIds = secondaryResults.slice(0, 3).map((r) => r.id);
           const currentContext = await sessionService.getContext(sessionId);
           const combinedIds = [
             ...(currentContext?.last_mentioned_items || []),
@@ -478,8 +485,42 @@ router.post("/", optionalAuth, async (req, res) => {
       }
     }
 
+    // Determine result limit: allow 1 if explicitly requested, otherwise min 2, max 6
+    const hasExplicitLimit =
+      intentData.limit !== null && intentData.limit !== undefined;
+    const requestedLimit = hasExplicitLimit ? intentData.limit! : 5;
+    const resultLimit = hasExplicitLimit
+      ? Math.min(6, Math.max(1, requestedLimit)) // Allow 1 if explicitly requested
+      : Math.min(6, Math.max(2, requestedLimit)); // Default min 2 when not specified
+    const requestedCount = intentData.requested_count;
+
     // Prepare response
-    const topResults = results.slice(0, 5);
+    let topResults = results.slice(0, resultLimit);
+    let fewerResultsThanRequested = false;
+    let relatedRecommendations: any[] = [];
+
+    // Check if we have fewer results than requested
+    if (
+      requestedCount &&
+      results.length < requestedCount &&
+      results.length >= 2
+    ) {
+      fewerResultsThanRequested = true;
+    }
+
+    // If we have very few results (less than minimum), try to find related items
+    if (results.length < 2 && intentData.semantic_query) {
+      // Try semantic-only search with relaxed filters to find related items
+      const relaxedResults = semanticOnlySearch(queryEmbedding, 10);
+      // Filter out items already in results
+      const existingIds = new Set(results.map((r) => r.id));
+      relatedRecommendations = relaxedResults
+        .filter((r) => !existingIds.has(r.id))
+        .slice(0, resultLimit - results.length);
+
+      // Combine original results with related recommendations
+      topResults = [...results, ...relatedRecommendations];
+    }
 
     // Get cart with user context and summary
     const cart = await cartService.getOrCreateCart(sessionId, userId);
@@ -531,15 +572,27 @@ router.post("/", optionalAuth, async (req, res) => {
       return res.json(response);
     }
 
+    // Build dynamic message based on results and availability
+    let responseMessage: string;
+    if (intentData.message) {
+      responseMessage = intentData.message;
+    } else if (relatedRecommendations.length > 0) {
+      responseMessage = `We don't have exact matches for "${queryText}", but here are some related dishes you might enjoy!`;
+    } else if (fewerResultsThanRequested) {
+      responseMessage = `We found ${results.length} option${results.length === 1 ? "" : "s"} for you (you requested ${requestedCount}). Here are our best matches!`;
+    } else if (results.length === 0) {
+      responseMessage = "We couldn't find any dishes matching your request.";
+    } else {
+      responseMessage = `Found ${results.length} delicious option${results.length === 1 ? "" : "s"} for you!`;
+    }
+
     // Success response
     const summary = await sessionService.getConversationSummary(sessionId);
     const response: SearchResponse = {
       session_id: sessionId,
       is_new_session: isNewSession,
       intent: intentData.intent,
-      message:
-        intentData.message ||
-        `Found ${results.length} delicious options for you!`,
+      message: responseMessage,
       follow_up_question:
         intentData.follow_up_question ||
         "Would you like to add any sides or drinks?",
@@ -547,7 +600,7 @@ router.post("/", optionalAuth, async (req, res) => {
       filter_description: filterDescription,
       semantic_query: queryText,
       results: topResults,
-      total: results.length,
+      total: topResults.length,
       search_mode: searchMode,
       conversation: {
         message_count: summary.messageCount,
@@ -555,7 +608,25 @@ router.post("/", optionalAuth, async (req, res) => {
       },
       cart_summary: cartSummary,
       secondary_results:
-        secondaryResults.length > 0 ? secondaryResults.slice(0, 5) : undefined,
+        secondaryResults.length > 0 ? secondaryResults.slice(0, 3) : undefined,
+      // Add info about result availability
+      result_info:
+        fewerResultsThanRequested && requestedCount
+          ? {
+              requested: requestedCount,
+              available: results.length,
+              message: `Showing all ${results.length} available option${results.length === 1 ? "" : "s"}`,
+            }
+          : undefined,
+      // Add info about related recommendations
+      related_recommendations:
+        relatedRecommendations.length > 0
+          ? {
+              reason: `No exact matches for "${queryText}"`,
+              message: "Here are some related dishes you might like instead",
+              items: relatedRecommendations,
+            }
+          : undefined,
     };
 
     // Add fallback info if used
