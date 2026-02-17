@@ -1,8 +1,8 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/api";
 import { useChatStore } from "@/stores/chat";
 import { useCartStore } from "@/stores/cart";
-import type { SendMessageInput, SearchResponse, Food } from "@/types";
+import type { SendMessageInput, SearchResponse } from "@/types";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 
@@ -12,6 +12,7 @@ const sendMessage = async (data: SendMessageInput): Promise<SearchResponse> => {
 };
 
 export function useChat() {
+  const queryClient = useQueryClient();
   const addMessage = useChatStore((state) => state.addMessage);
   const setSessionId = useChatStore((state) => state.setSessionId);
   const setIsLoading = useChatStore((state) => state.setIsLoading);
@@ -42,15 +43,18 @@ export function useChat() {
 
       // Handle different response types
       if (data.intent === "add_to_cart" && data.items_added) {
-        // Update cart with added items
+        // Update cart with added items from server response
         data.items_added.forEach((item) => {
           addCartItem(item);
         });
         toast.success(`Added ${data.items_added.length} item(s) to cart`);
       }
 
+      // Always update cart from server response to ensure sync
       if (data.cart) {
         setCart(data.cart);
+        // Invalidate cart query to ensure consistency
+        queryClient.invalidateQueries({ queryKey: ["cart", data.session_id] });
       }
 
       // Add assistant message
@@ -79,39 +83,4 @@ export function useChat() {
       });
     },
   });
-}
-
-export function useAddToCart() {
-  const addCartItem = useCartStore((state) => state.addItem);
-  const session_id = useChatStore((state) => state.session_id);
-
-  return async (food: Food, quantity: number) => {
-    if (!session_id) {
-      toast.error("No active session");
-      return;
-    }
-
-    try {
-      const response = await api.post("/cart/items", {
-        session_id: session_id,
-        food_id: food.id,
-        quantity,
-      });
-
-      // Update local cart
-      addCartItem({
-        id: response.data.item.id,
-        food_id: food.id,
-        food_name: food.name,
-        quantity,
-        price: food.price,
-        added_at: Date.now(),
-      });
-
-      toast.success(`Added ${food.name} to cart`);
-    } catch (error) {
-      const axiosError = error as AxiosError<{ error: string }>;
-      toast.error(axiosError.response?.data?.error || "Failed to add to cart");
-    }
-  };
 }

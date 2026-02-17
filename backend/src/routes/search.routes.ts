@@ -14,15 +14,13 @@ import { SearchMode, SearchResponse } from "../types/search.js";
 import { SessionService } from "../services/session.service.js";
 import { CartService } from "../services/cart.service.js";
 import { ReferenceResolver } from "../services/reference-resolver.service.js";
-import { DatabaseService } from "../services/database.service.js";
 import { optionalAuth } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
 // Initialize services
-const db = DatabaseService.getInstance().getDb();
-const sessionService = new SessionService(db);
-const cartService = new CartService(db);
+const sessionService = new SessionService();
+const cartService = new CartService();
 const referenceResolver = new ReferenceResolver(sessionService);
 
 router.post("/", optionalAuth, async (req, res) => {
@@ -39,30 +37,33 @@ router.post("/", optionalAuth, async (req, res) => {
     let isNewSession = false;
 
     if (!sessionId) {
-      const session = sessionService.createSession(userId);
+      const session = await sessionService.createSession(userId);
       sessionId = session.id;
       isNewSession = true;
     } else {
-      const session = sessionService.getSession(sessionId);
+      const session = await sessionService.getSession(sessionId);
       if (!session) {
-        const newSession = sessionService.createSession(userId);
+        const newSession = await sessionService.createSession(userId);
         sessionId = newSession.id;
         isNewSession = true;
       } else if (userId && !session.user_id) {
         // Link existing session to user if they're now logged in
-        sessionService.linkSessionToUser(sessionId, userId);
+        await sessionService.linkSessionToUser(sessionId, userId);
       }
     }
 
     // Step 2: Add user message to history
-    sessionService.addMessage({
+    await sessionService.addMessage({
       session_id: sessionId,
       role: "user",
       content: message,
     });
 
     // Step 3: Get conversation history for context
-    const conversationHistory = sessionService.getRecentMessages(sessionId, 5);
+    const conversationHistory = await sessionService.getRecentMessages(
+      sessionId,
+      5,
+    );
 
     // Step 4: Extract intent (with conversation context)
     const intentData = await extractIntent(message, conversationHistory);
@@ -79,19 +80,19 @@ router.post("/", optionalAuth, async (req, res) => {
     if (intentData.intent === "add_to_cart") {
       // Try to resolve reference
       if (intentData.item_reference) {
-        const resolved = referenceResolver.resolveReference(
+        const resolved = await referenceResolver.resolveReference(
           intentData.item_reference,
           sessionId,
         );
 
         if (resolved.items.length > 0) {
           // Get or create cart with user context
-          const cart = cartService.getOrCreateCart(sessionId, userId);
+          const cart = await cartService.getOrCreateCart(sessionId, userId);
 
           // Add resolved items to cart
           const addedItems = [];
           for (const food of resolved.items) {
-            const item = cartService.addItem({
+            const item = await cartService.addItem({
               cart_id: cart.id,
               session_id: sessionId,
               user_id: userId,
@@ -104,7 +105,10 @@ router.post("/", optionalAuth, async (req, res) => {
           }
 
           // Get updated cart
-          const cartWithItems = cartService.getCartWithItems(sessionId, userId);
+          const cartWithItems = await cartService.getCartWithItems(
+            sessionId,
+            userId,
+          );
 
           const response = {
             session_id: sessionId,
@@ -122,7 +126,7 @@ router.post("/", optionalAuth, async (req, res) => {
           };
 
           // Save assistant response
-          sessionService.addMessage({
+          await sessionService.addMessage({
             session_id: sessionId,
             role: "assistant",
             content: JSON.stringify(response),
@@ -142,7 +146,7 @@ router.post("/", optionalAuth, async (req, res) => {
               "Please specify which item you'd like to add, or search for it again.",
           };
 
-          sessionService.addMessage({
+          await sessionService.addMessage({
             session_id: sessionId,
             role: "assistant",
             content: JSON.stringify(response),
@@ -161,7 +165,7 @@ router.post("/", optionalAuth, async (req, res) => {
           suggestion: "Please search for an item first, then add it to cart.",
         };
 
-        sessionService.addMessage({
+        await sessionService.addMessage({
           session_id: sessionId,
           role: "assistant",
           content: JSON.stringify(response),
@@ -177,7 +181,7 @@ router.post("/", optionalAuth, async (req, res) => {
     // ============================================================
     if (intentData.intent === "details") {
       if (intentData.item_reference) {
-        const resolved = referenceResolver.resolveReference(
+        const resolved = await referenceResolver.resolveReference(
           intentData.item_reference,
           sessionId,
         );
@@ -197,7 +201,7 @@ router.post("/", optionalAuth, async (req, res) => {
             },
           };
 
-          sessionService.addMessage({
+          await sessionService.addMessage({
             session_id: sessionId,
             role: "assistant",
             content: JSON.stringify(response),
@@ -222,7 +226,7 @@ router.post("/", optionalAuth, async (req, res) => {
     // Handle CHECKOUT Intent
     // ============================================================
     if (intentData.intent === "checkout") {
-      const cartWithItems = cartService.getCartWithItems(sessionId);
+      const cartWithItems = await cartService.getCartWithItems(sessionId);
 
       if (!cartWithItems || cartWithItems.items.length === 0) {
         return res.json({
@@ -243,7 +247,7 @@ router.post("/", optionalAuth, async (req, res) => {
         next_step: "Please provide delivery details",
       };
 
-      sessionService.addMessage({
+      await sessionService.addMessage({
         session_id: sessionId,
         role: "assistant",
         content: JSON.stringify(response),
@@ -293,16 +297,16 @@ router.post("/", optionalAuth, async (req, res) => {
     // Update session context with results
     if (results.length > 0) {
       const itemIds = results.slice(0, 10).map((r) => r.id);
-      sessionService.updateLastMentionedItems(sessionId, itemIds);
-      sessionService.updateLastSearchQuery(sessionId, queryText);
+      await sessionService.updateLastMentionedItems(sessionId, itemIds);
+      await sessionService.updateLastSearchQuery(sessionId, queryText);
     }
 
     // Prepare response
     const topResults = results.slice(0, 5);
 
     // Get cart with user context and summary
-    const cart = cartService.getOrCreateCart(sessionId, userId);
-    const cartWithItems = cartService.getCartWithItems(sessionId, userId);
+    const cart = await cartService.getOrCreateCart(sessionId, userId);
+    const cartWithItems = await cartService.getCartWithItems(sessionId, userId);
     const cartSummary = cartWithItems
       ? {
           has_cart: true,
@@ -337,7 +341,7 @@ router.post("/", optionalAuth, async (req, res) => {
         cart_summary: cartSummary,
       };
 
-      sessionService.addMessage({
+      await sessionService.addMessage({
         session_id: sessionId,
         role: "assistant",
         content: JSON.stringify(response),
@@ -350,7 +354,7 @@ router.post("/", optionalAuth, async (req, res) => {
     }
 
     // Success response
-    const summary = sessionService.getConversationSummary(sessionId);
+    const summary = await sessionService.getConversationSummary(sessionId);
     const response: SearchResponse = {
       session_id: sessionId,
       is_new_session: isNewSession,
@@ -380,7 +384,7 @@ router.post("/", optionalAuth, async (req, res) => {
     }
 
     // Save assistant response
-    sessionService.addMessage({
+    await sessionService.addMessage({
       session_id: sessionId,
       role: "assistant",
       content: JSON.stringify(topResults),
@@ -408,14 +412,14 @@ router.get("/:sessionId/history", async (req, res) => {
       ? parseInt(req.query.limit as string)
       : undefined;
 
-    const session = sessionService.getSession(sessionId);
+    const session = await sessionService.getSession(sessionId);
     if (!session) {
       return res.status(404).json({ error: "Session not found" });
     }
 
-    const history = sessionService.getHistory(sessionId, limit);
-    const context = sessionService.getContext(sessionId);
-    const summary = sessionService.getConversationSummary(sessionId);
+    const history = await sessionService.getHistory(sessionId, limit);
+    const context = await sessionService.getContext(sessionId);
+    const summary = await sessionService.getConversationSummary(sessionId);
 
     res.json({
       session,
@@ -436,7 +440,7 @@ router.get("/:sessionId/context", async (req, res) => {
   try {
     const { sessionId } = req.params;
 
-    const context = sessionService.getContext(sessionId);
+    const context = await sessionService.getContext(sessionId);
     if (!context) {
       return res.status(404).json({ error: "Context not found" });
     }

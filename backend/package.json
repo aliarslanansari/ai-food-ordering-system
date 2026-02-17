@@ -6,28 +6,26 @@
   "license": "MIT",
   "scripts": {
     "dev": "env-cmd -f .env node --loader ts-node/esm --watch src/index.ts",
-    "build": "tsc && npm run copy:db",
+    "build": "tsc",
     "build:local": "env-cmd -f .env yarn build",
-    "copy:db": "cp -r src/db dist/",
     "start": "node dist/index.js",
     "generate:embeddings": "env-cmd -f .env node --loader ts-node/esm src/scripts/generate-embeddings.ts"
   },
   "dependencies": {
     "@google/genai": "^1.41.0",
     "@types/bcrypt": "^6.0.0",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.2.3",
     "axios": "^1.13.5",
     "bcrypt": "^6.0.0",
-    "better-sqlite3": "^12.6.2",
     "cors": "^2.8.6",
     "env-cmd": "^11.0.0",
     "express": "^5.2.1",
     "imagekit": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.2.1",
     "typescript": "^5.9.3"
   },
   "devDependencies": {

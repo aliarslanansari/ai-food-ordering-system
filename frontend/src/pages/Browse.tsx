@@ -17,10 +17,16 @@ import {
 import { Search } from "lucide-react";
 import { useCartStore } from "../stores/cart";
 import { useChatStore } from "../stores/chat";
-import { useAddToCart } from "../hooks/useChat";
+import {
+  useAddToCart,
+  useUpdateCartQuantity,
+  useRemoveFromCart,
+  useClearCart,
+} from "../hooks/useCart";
 import { useAuth } from "../hooks/useAuth";
 import { useFoods } from "../hooks/useFoods";
 import type { Food } from "../types";
+import { toast } from "sonner";
 
 const SORT_OPTIONS = [
   { value: "default", label: "Default" },
@@ -46,12 +52,12 @@ export default function Browse() {
   const isCartOpen = useCartStore((state) => state.isOpen);
   const toggleCart = useCartStore((state) => state.toggleCart);
   const closeCart = useCartStore((state) => state.closeCart);
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const removeItem = useCartStore((state) => state.removeItem);
-  const clearCart = useCartStore((state) => state.clearCart);
   const addCartItem = useCartStore((state) => state.addItem);
 
   const addToCartMutation = useAddToCart();
+  const updateQuantityMutation = useUpdateCartQuantity();
+  const removeItemMutation = useRemoveFromCart();
+  const clearCartMutation = useClearCart();
 
   // Generate categories dynamically from foods data
   const categories = useMemo(() => {
@@ -102,6 +108,7 @@ export default function Browse() {
 
   const handleAddToCart = async (food: Food, quantity: number) => {
     if (!session_id) {
+      // Add to local state first for immediate UI feedback
       addCartItem({
         id: `local_${Date.now()}`,
         food_id: food.id,
@@ -110,8 +117,9 @@ export default function Browse() {
         price: food.price,
         added_at: Date.now(),
       });
+      toast.info("Item saved locally. Start a chat to sync your cart.");
     } else {
-      await addToCartMutation(food, quantity);
+      addToCartMutation.mutate({ food, quantity });
     }
   };
 
@@ -293,9 +301,11 @@ export default function Browse() {
         itemCount={itemCount}
         isOpen={isCartOpen}
         onOpenChange={closeCart}
-        onUpdateQuantity={updateQuantity}
-        onRemoveItem={removeItem}
-        onClearCart={clearCart}
+        onUpdateQuantity={(itemId, quantity) =>
+          updateQuantityMutation.mutate({ itemId, quantity })
+        }
+        onRemoveItem={(itemId) => removeItemMutation.mutate(itemId)}
+        onClearCart={() => clearCartMutation.mutate()}
         onCheckout={handleCheckout}
       />
     </div>

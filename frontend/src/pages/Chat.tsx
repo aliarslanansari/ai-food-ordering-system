@@ -7,8 +7,14 @@ import { CartSidebar } from "../components/CartSidebar";
 import { Button } from "../components/ui/button";
 import { useChatStore } from "../stores/chat";
 import { useCartStore } from "../stores/cart";
-import { useChat, useAddToCart } from "../hooks/useChat";
+import { useChat } from "../hooks/useChat";
 import { useAuth } from "../hooks/useAuth";
+import {
+  useAddToCart,
+  useUpdateCartQuantity,
+  useRemoveFromCart,
+  useClearCart,
+} from "../hooks/useCart";
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -25,12 +31,12 @@ export default function Chat() {
   const isCartOpen = useCartStore((state) => state.isOpen);
   const toggleCart = useCartStore((state) => state.toggleCart);
   const closeCart = useCartStore((state) => state.closeCart);
-  const removeItem = useCartStore((state) => state.removeItem);
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const clearCart = useCartStore((state) => state.clearCart);
 
   const { mutate: sendMessage, isPending } = useChat();
   const addToCart = useAddToCart();
+  const updateQuantityMutation = useUpdateCartQuantity();
+  const removeItemMutation = useRemoveFromCart();
+  const clearCartMutation = useClearCart();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -96,7 +102,9 @@ export default function Chat() {
                     <ChatMessage
                       key={message.id}
                       message={message}
-                      onAddToCart={addToCart}
+                      onAddToCart={(food, quantity) =>
+                        addToCart.mutate({ food, quantity })
+                      }
                     />
                   ))}
                   {isLoading && <TypingIndicator />}
@@ -125,9 +133,11 @@ export default function Chat() {
           itemCount={itemCount}
           isOpen={isCartOpen}
           onOpenChange={closeCart}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeItem}
-          onClearCart={clearCart}
+          onUpdateQuantity={(itemId, quantity) =>
+            updateQuantityMutation.mutate({ itemId, quantity })
+          }
+          onRemoveItem={(itemId) => removeItemMutation.mutate(itemId)}
+          onClearCart={() => clearCartMutation.mutate()}
           onCheckout={handleCheckout}
         />
       </div>

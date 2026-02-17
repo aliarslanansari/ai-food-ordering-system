@@ -12,9 +12,9 @@ export class ReferenceResolver {
   /**
    * Get last mentioned items from context or conversation history
    */
-  private getLastMentionedItems(sessionId: string): string[] {
+  private async getLastMentionedItems(sessionId: string): Promise<string[]> {
     // First try to get from context
-    const context = this.sessionService.getContext(sessionId);
+    const context = await this.sessionService.getContext(sessionId);
     console.log(`[Resolver] Context for ${sessionId}:`, context);
 
     if (
@@ -28,7 +28,10 @@ export class ReferenceResolver {
     }
 
     // Fallback: check recent assistant messages for results
-    const recentMessages = this.sessionService.getRecentMessages(sessionId, 10);
+    const recentMessages = await this.sessionService.getRecentMessages(
+      sessionId,
+      10,
+    );
     console.log(`[Resolver] Checking ${recentMessages.length} recent messages`);
 
     for (let i = recentMessages.length - 1; i >= 0; i--) {
@@ -69,16 +72,16 @@ export class ReferenceResolver {
    * @param sessionId - Session ID to get context
    * @returns Array of resolved food items
    */
-  resolveReference(
+  async resolveReference(
     itemReference: string,
     sessionId: string,
-  ): { items: Food[]; confidence: number; reason: string } {
+  ): Promise<{ items: Food[]; confidence: number; reason: string }> {
     if (!itemReference) {
       return { items: [], confidence: 0, reason: "No reference provided" };
     }
 
     // Get last mentioned items from context or history
-    const lastItems = this.getLastMentionedItems(sessionId);
+    const lastItems = await this.getLastMentionedItems(sessionId);
     console.log({ lastItems, itemReference, sessionId });
 
     if (lastItems.length === 0) {
@@ -231,8 +234,11 @@ export class ReferenceResolver {
   /**
    * Get explanation for why reference resolution worked or failed
    */
-  getResolutionExplanation(itemReference: string, sessionId: string): string {
-    const result = this.resolveReference(itemReference, sessionId);
+  async getResolutionExplanation(
+    itemReference: string,
+    sessionId: string,
+  ): Promise<string> {
+    const result = await this.resolveReference(itemReference, sessionId);
 
     if (result.items.length > 0) {
       return `✅ ${result.reason}`;

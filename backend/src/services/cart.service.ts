@@ -1,5 +1,5 @@
-import Database from "better-sqlite3";
 import { randomUUID } from "crypto";
+import { CartModel, CartItemModel, ICart, ICartItem } from "../models/index.js";
 
 // ============================================================
 // Type Definitions
@@ -45,8 +45,6 @@ export interface AddToCartInput {
 // ============================================================
 
 export class CartService {
-  constructor(private db: Database.Database) {}
-
   // ============================================================
   // Cart Management
   // ============================================================
@@ -54,18 +52,18 @@ export class CartService {
   /**
    * Get or create cart for a session
    */
-  getOrCreateCart(sessionId: string, userId?: string): Cart {
+  async getOrCreateCart(sessionId: string, userId?: string): Promise<Cart> {
     // Try to get existing cart
-    let cart = this.getCartBySession(sessionId);
+    let cart = await this.getCartBySession(sessionId);
 
     // If user is logged in, try to get their user cart
     if (!cart && userId) {
-      cart = this.getCartByUser(userId);
+      cart = await this.getCartByUser(userId);
     }
 
     if (!cart) {
       // Create new cart
-      cart = this.createCart(sessionId, userId);
+      cart = await this.createCart(sessionId, userId);
       console.log(
         `✅ Cart created: ${cart.id} for session: ${sessionId}${userId ? `, user: ${userId}` : ""}`,
       );
@@ -77,66 +75,57 @@ export class CartService {
   /**
    * Create a new cart
    */
-  private createCart(sessionId: string, userId?: string): Cart {
-    const cart: Cart = {
+  private async createCart(sessionId: string, userId?: string): Promise<Cart> {
+    const now = Date.now();
+    const cartDoc = await CartModel.create({
       id: randomUUID(),
       session_id: sessionId,
-      user_id: userId,
-      created_at: Date.now(),
-      updated_at: Date.now(),
-    };
+      user_id: userId || null,
+      created_at: now,
+      updated_at: now,
+    });
 
-    const stmt = this.db.prepare(`
-      INSERT INTO carts (id, session_id, user_id, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?)
-    `);
-
-    stmt.run(
-      cart.id,
-      cart.session_id,
-      cart.user_id || null,
-      cart.created_at,
-      cart.updated_at,
-    );
-
-    return cart;
+    return this.toCart(cartDoc);
   }
 
   /**
    * Get cart by user ID
    */
-  getCartByUser(userId: string): Cart | null {
-    const stmt = this.db.prepare(`
-      SELECT * FROM carts WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1
-    `);
-
-    const row = stmt.get(userId) as any;
-
-    if (!row) {
-      return null;
-    }
-
-    return {
-      id: row.id,
-      session_id: row.session_id,
-      user_id: row.user_id,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    };
+  async getCartByUser(userId: string): Promise<Cart | null> {
+    const cartDoc = await CartModel.findOne({ user_id: userId }).sort({
+      updated_at: -1,
+    });
+    return cartDoc ? this.toCart(cartDoc) : null;
   }
 
   /**
    * Link cart to user
    */
-  linkCartToUser(cartId: string, userId: string): boolean {
-    const stmt = this.db.prepare(`
-      UPDATE carts SET user_id = ? WHERE id = ?
-    `);
+  async linkCartToUser(cartId: string, userId: string): Promise<boolean> {
+    const result = await CartModel.updateOne(
+      { id: cartId },
+      { $set: { user_id: userId } },
+    );
 
-    const result = stmt.run(userId, cartId);
-
-    if (result.changes > 0) {
+    if (result.modifiedCount > 0) {
       console.log(`✅ Cart ${cartId} linked to user ${userId}`);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Link cart to session (for cross-device cart persistence)
+   */
+  async linkCartToSession(cartId: string, sessionId: string): Promise<boolean> {
+    const result = await CartModel.updateOne(
+      { id: cartId },
+      { $set: { session_id: sessionId, updated_at: Date.now() } },
+    );
+
+    if (result.modifiedCount > 0) {
+      console.log(`✅ Cart ${cartId} linked to session ${sessionId}`);
       return true;
     }
 
@@ -146,47 +135,75 @@ export class CartService {
   /**
    * Merge guest cart items into user cart
    * Returns the merged cart with items
+   * Handles cross-device scenarios where sessionId may differ from user's existing cart
    */
-  mergeCarts(sessionId: string, userId: string): CartWithItems | null {
-    // Get guest cart by session
-    const guestCart = this.getCartBySession(sessionId);
+  async mergeCarts(
+    sessionId: string,
+    userId: string,
+  ): Promise<CartWithItems | null> {
+    // Get guest cart by session (current device/session)
+    const guestCart = await this.getCartBySession(sessionId);
 
-    // If no guest cart or guest cart has no items, just return user's cart
+    // Get user's existing cart (may be from different device)
+    let userCart = await this.getCartByUser(userId);
+
+    // Case 1: No guest cart exists
     if (!guestCart) {
+      if (userCart) {
+        // User has existing cart from another device - link current session to it
+        await this.linkCartToSession(userCart.id, sessionId);
+        console.log(
+          `✅ Linked existing user cart ${userCart.id} to new session ${sessionId}`,
+        );
+      }
+      // Return user's cart (existing or empty)
       return this.getCartWithItems(sessionId, userId);
     }
 
     // Get guest cart items
-    const guestItems = this.getCartItems(guestCart.id);
+    const guestItems = await this.getCartItems(guestCart.id);
 
-    // If guest cart is empty, just return user's cart
+    // Case 2: Guest cart exists but is empty
     if (guestItems.length === 0) {
+      if (userCart && userCart.id !== guestCart.id) {
+        // Delete empty guest cart and link to user cart
+        await this.deleteCart(guestCart.id);
+        await this.linkCartToSession(userCart.id, sessionId);
+      } else if (!userCart) {
+        // Convert empty guest cart to user cart
+        await CartModel.updateOne(
+          { id: guestCart.id },
+          { $set: { user_id: userId } },
+        );
+      }
       return this.getCartWithItems(sessionId, userId);
     }
 
-    // Get or create user cart
-    let userCart = this.getCartByUser(userId);
-
+    // Case 3: Guest cart has items
     if (!userCart) {
-      // Convert guest cart to user cart by updating user_id
-      const stmt = this.db.prepare(`
-        UPDATE carts SET user_id = ? WHERE id = ?
-      `);
-      stmt.run(userId, guestCart.id);
-
-      // Update session_id to current session
-      const updateSessionStmt = this.db.prepare(`
-        UPDATE carts SET session_id = ? WHERE id = ?
-      `);
-      updateSessionStmt.run(sessionId, guestCart.id);
+      // No existing user cart - convert guest cart to user cart
+      await CartModel.updateOne(
+        { id: guestCart.id },
+        { $set: { user_id: userId, session_id: sessionId } },
+      );
 
       console.log(`✅ Guest cart ${guestCart.id} linked to user ${userId}`);
 
       return this.getCartWithItems(sessionId, userId);
     }
 
-    // User has an existing cart - merge items
-    const userItems = this.getCartItems(userCart.id);
+    // Case 4: Both guest cart and user cart exist - need to merge
+    // Don't merge if they're the same cart
+    if (userCart.id === guestCart.id) {
+      await CartModel.updateOne(
+        { id: userCart.id },
+        { $set: { user_id: userId, session_id: sessionId } },
+      );
+      return this.getCartWithItems(sessionId, userId);
+    }
+
+    // User has an existing cart - merge guest items into user cart
+    const userItems = await this.getCartItems(userCart.id);
 
     // Merge guest items into user cart
     for (const guestItem of guestItems) {
@@ -197,28 +214,31 @@ export class CartService {
       if (existingItem) {
         // Update quantity of existing item
         const newQuantity = existingItem.quantity + guestItem.quantity;
-        this.updateItemQuantity(existingItem.id, newQuantity);
+        await this.updateItemQuantity(existingItem.id, newQuantity);
       } else {
         // Move item from guest cart to user cart
-        const moveStmt = this.db.prepare(`
-          UPDATE cart_items SET cart_id = ? WHERE id = ?
-        `);
-        moveStmt.run(userCart.id, guestItem.id);
+        await CartItemModel.updateOne(
+          { id: guestItem.id },
+          { $set: { cart_id: userCart.id } },
+        );
       }
     }
 
     // Delete guest cart (items are either moved or already updated)
-    this.deleteCart(guestCart.id);
+    await this.deleteCart(guestCart.id);
 
-    // Update user cart timestamp
-    this.touchCart(userCart.id);
+    // Update user cart timestamp and session
+    await CartModel.updateOne(
+      { id: userCart.id },
+      { $set: { session_id: sessionId, updated_at: Date.now() } },
+    );
 
     console.log(
       `✅ Merged ${guestItems.length} items from guest cart to user ${userId}'s cart`,
     );
 
     // Return merged cart
-    const items = this.getCartItems(userCart.id);
+    const items = await this.getCartItems(userCart.id);
     const total = items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0,
@@ -236,69 +256,37 @@ export class CartService {
   /**
    * Get cart by session ID
    */
-  getCartBySession(sessionId: string): Cart | null {
-    const stmt = this.db.prepare(`
-      SELECT * FROM carts WHERE session_id = ? ORDER BY updated_at DESC LIMIT 1
-    `);
-
-    const row = stmt.get(sessionId) as any;
-
-    if (!row) {
-      return null;
-    }
-
-    return {
-      id: row.id,
-      session_id: row.session_id,
-      user_id: row.user_id,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    };
+  async getCartBySession(sessionId: string): Promise<Cart | null> {
+    const cartDoc = await CartModel.findOne({ session_id: sessionId }).sort({
+      updated_at: -1,
+    });
+    return cartDoc ? this.toCart(cartDoc) : null;
   }
 
   /**
    * Get cart by cart ID
    */
-  getCart(cartId: string): Cart | null {
-    const stmt = this.db.prepare(`
-      SELECT * FROM carts WHERE id = ?
-    `);
-
-    const row = stmt.get(cartId) as any;
-
-    if (!row) {
-      return null;
-    }
-
-    return {
-      id: row.id,
-      session_id: row.session_id,
-      user_id: row.user_id,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    };
+  async getCart(cartId: string): Promise<Cart | null> {
+    const cartDoc = await CartModel.findOne({ id: cartId });
+    return cartDoc ? this.toCart(cartDoc) : null;
   }
 
   /**
    * Update cart timestamp
    */
-  private touchCart(cartId: string): void {
-    const stmt = this.db.prepare(`
-      UPDATE carts SET updated_at = ? WHERE id = ?
-    `);
-
-    stmt.run(Date.now(), cartId);
+  private async touchCart(cartId: string): Promise<void> {
+    await CartModel.updateOne(
+      { id: cartId },
+      { $set: { updated_at: Date.now() } },
+    );
   }
 
   /**
-   * Delete cart (and all items via CASCADE)
+   * Delete cart (and all items via pre-delete hook or manual cleanup)
    */
-  deleteCart(cartId: string): void {
-    const stmt = this.db.prepare(`
-      DELETE FROM carts WHERE id = ?
-    `);
-
-    stmt.run(cartId);
+  async deleteCart(cartId: string): Promise<void> {
+    await CartItemModel.deleteMany({ cart_id: cartId });
+    await CartModel.deleteOne({ id: cartId });
     console.log(`✅ Cart deleted: ${cartId}`);
   }
 
@@ -309,12 +297,12 @@ export class CartService {
   /**
    * Add item to cart (or update quantity if exists)
    */
-  addItem(input: AddToCartInput): CartItem {
+  async addItem(input: AddToCartInput): Promise<CartItem> {
     // Get or create cart
-    const cart = this.getOrCreateCart(input.session_id);
+    const cart = await this.getOrCreateCart(input.session_id);
 
     // Check if item already exists in cart
-    const existingItem = this.getItemByFoodId(cart.id, input.food_id);
+    const existingItem = await this.getItemByFoodId(cart.id, input.food_id);
 
     if (existingItem) {
       // Update quantity
@@ -323,7 +311,7 @@ export class CartService {
     }
 
     // Add new item
-    const item: CartItem = {
+    const itemDoc = await CartItemModel.create({
       id: randomUUID(),
       cart_id: cart.id,
       food_id: input.food_id,
@@ -331,90 +319,55 @@ export class CartService {
       quantity: input.quantity,
       price: input.price,
       added_at: Date.now(),
-    };
-
-    const stmt = this.db.prepare(`
-      INSERT INTO cart_items (id, cart_id, food_id, food_name, quantity, price, added_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    stmt.run(
-      item.id,
-      item.cart_id,
-      item.food_id,
-      item.food_name,
-      item.quantity,
-      item.price,
-      item.added_at,
-    );
+    });
 
     // Update cart timestamp
-    this.touchCart(cart.id);
+    await this.touchCart(cart.id);
 
-    console.log(`✅ Item added to cart: ${item.food_name} x${item.quantity}`);
-    return item;
+    console.log(
+      `✅ Item added to cart: ${itemDoc.food_name} x${itemDoc.quantity}`,
+    );
+    return this.toCartItem(itemDoc);
   }
 
   /**
    * Get item by food ID in a specific cart
    */
-  private getItemByFoodId(cartId: string, foodId: string): CartItem | null {
-    const stmt = this.db.prepare(`
-      SELECT * FROM cart_items 
-      WHERE cart_id = ? AND food_id = ?
-    `);
-
-    const row = stmt.get(cartId, foodId) as any;
-
-    if (!row) {
-      return null;
-    }
-
-    return {
-      id: row.id,
-      cart_id: row.cart_id,
-      food_id: row.food_id,
-      food_name: row.food_name,
-      quantity: row.quantity,
-      price: row.price,
-      added_at: row.added_at,
-    };
+  private async getItemByFoodId(
+    cartId: string,
+    foodId: string,
+  ): Promise<CartItem | null> {
+    const itemDoc = await CartItemModel.findOne({
+      cart_id: cartId,
+      food_id: foodId,
+    });
+    return itemDoc ? this.toCartItem(itemDoc) : null;
   }
 
   /**
    * Get all items in a cart
    */
-  getCartItems(cartId: string): CartItem[] {
-    const stmt = this.db.prepare(`
-      SELECT * FROM cart_items 
-      WHERE cart_id = ? 
-      ORDER BY added_at ASC
-    `);
-
-    const rows = stmt.all(cartId) as any[];
-
-    return rows.map((row) => ({
-      id: row.id,
-      cart_id: row.cart_id,
-      food_id: row.food_id,
-      food_name: row.food_name,
-      quantity: row.quantity,
-      price: row.price,
-      added_at: row.added_at,
-    }));
+  async getCartItems(cartId: string): Promise<CartItem[]> {
+    const itemDocs = await CartItemModel.find({ cart_id: cartId }).sort({
+      added_at: 1,
+    });
+    return itemDocs.map((doc) => this.toCartItem(doc));
   }
 
   /**
    * Get cart with all items and totals
    */
-  getCartWithItems(sessionId: string, userId?: string): CartWithItems | null {
-    const cart = this.getOrCreateCart(sessionId, userId);
+  async getCartWithItems(
+    sessionId: string,
+    userId?: string,
+  ): Promise<CartWithItems | null> {
+    const cart = await this.getOrCreateCart(sessionId, userId);
 
     if (!cart) {
       return null;
     }
 
-    const items = this.getCartItems(cart.id);
+    const items = await this.getCartItems(cart.id);
     const total = items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0,
@@ -432,84 +385,60 @@ export class CartService {
   /**
    * Update item quantity
    */
-  updateItemQuantity(itemId: string, quantity: number): CartItem {
+  async updateItemQuantity(
+    itemId: string,
+    quantity: number,
+  ): Promise<CartItem> {
     if (quantity < 1) {
       throw new Error("Quantity must be at least 1");
     }
 
-    const stmt = this.db.prepare(`
-      UPDATE cart_items 
-      SET quantity = ? 
-      WHERE id = ?
-    `);
+    const itemDoc = await CartItemModel.findOneAndUpdate(
+      { id: itemId },
+      { $set: { quantity } },
+      { new: true },
+    );
 
-    stmt.run(quantity, itemId);
-
-    // Get updated item
-    const getStmt = this.db.prepare(`
-      SELECT * FROM cart_items WHERE id = ?
-    `);
-
-    const row = getStmt.get(itemId) as any;
+    if (!itemDoc) {
+      throw new Error("Item not found");
+    }
 
     // Update cart timestamp
-    this.touchCart(row.cart_id);
+    await this.touchCart(itemDoc.cart_id);
 
-    console.log(`✅ Item quantity updated: ${row.food_name} → ${quantity}`);
+    console.log(`✅ Item quantity updated: ${itemDoc.food_name} → ${quantity}`);
 
-    return {
-      id: row.id,
-      cart_id: row.cart_id,
-      food_id: row.food_id,
-      food_name: row.food_name,
-      quantity: row.quantity,
-      price: row.price,
-      added_at: row.added_at,
-    };
+    return this.toCartItem(itemDoc);
   }
 
   /**
    * Remove item from cart
    */
-  removeItem(itemId: string): void {
-    // Get item first to update cart
-    const getStmt = this.db.prepare(`
-      SELECT cart_id, food_name FROM cart_items WHERE id = ?
-    `);
+  async removeItem(itemId: string): Promise<void> {
+    const itemDoc = await CartItemModel.findOne({ id: itemId });
 
-    const row = getStmt.get(itemId) as any;
-
-    if (!row) {
+    if (!itemDoc) {
       throw new Error("Item not found");
     }
 
-    // Delete item
-    const deleteStmt = this.db.prepare(`
-      DELETE FROM cart_items WHERE id = ?
-    `);
-
-    deleteStmt.run(itemId);
+    await CartItemModel.deleteOne({ id: itemId });
 
     // Update cart timestamp
-    this.touchCart(row.cart_id);
+    await this.touchCart(itemDoc.cart_id);
 
-    console.log(`✅ Item removed from cart: ${row.food_name}`);
+    console.log(`✅ Item removed from cart: ${itemDoc.food_name}`);
   }
 
   /**
    * Clear all items from cart
    */
-  clearCart(cartId: string): void {
-    const stmt = this.db.prepare(`
-      DELETE FROM cart_items WHERE cart_id = ?
-    `);
-
-    const result = stmt.run(cartId);
+  async clearCart(cartId: string): Promise<void> {
+    const result = await CartItemModel.deleteMany({ cart_id: cartId });
 
     // Update cart timestamp
-    this.touchCart(cartId);
+    await this.touchCart(cartId);
 
-    console.log(`✅ Cart cleared: ${result.changes} items removed`);
+    console.log(`✅ Cart cleared: ${result.deletedCount} items removed`);
   }
 
   // ============================================================
@@ -519,15 +448,15 @@ export class CartService {
   /**
    * Get cart summary
    */
-  getCartSummary(
+  async getCartSummary(
     sessionId: string,
-    userId: string,
-  ): {
+    userId?: string,
+  ): Promise<{
     has_cart: boolean;
     item_count: number;
     total: number;
-  } {
-    const cartWithItems = this.getCartWithItems(sessionId, userId);
+  }> {
+    const cartWithItems = await this.getCartWithItems(sessionId, userId);
 
     if (!cartWithItems) {
       return {
@@ -547,32 +476,61 @@ export class CartService {
   /**
    * Check if cart is empty
    */
-  isCartEmpty(cartId: string): boolean {
-    const items = this.getCartItems(cartId);
-    return items.length === 0;
+  async isCartEmpty(cartId: string): Promise<boolean> {
+    const count = await CartItemModel.countDocuments({ cart_id: cartId });
+    return count === 0;
   }
 
   /**
    * Get total items in cart
    */
-  getCartItemCount(cartId: string): number {
-    const stmt = this.db.prepare(`
-      SELECT SUM(quantity) as total FROM cart_items WHERE cart_id = ?
-    `);
-
-    const result = stmt.get(cartId) as any;
-    return result?.total || 0;
+  async getCartItemCount(cartId: string): Promise<number> {
+    const result = await CartItemModel.aggregate([
+      { $match: { cart_id: cartId } },
+      { $group: { _id: null, total: { $sum: "$quantity" } } },
+    ]);
+    return result[0]?.total || 0;
   }
 
   /**
    * Get cart total price
    */
-  getCartTotal(cartId: string): number {
-    const stmt = this.db.prepare(`
-      SELECT SUM(price * quantity) as total FROM cart_items WHERE cart_id = ?
-    `);
+  async getCartTotal(cartId: string): Promise<number> {
+    const result = await CartItemModel.aggregate([
+      { $match: { cart_id: cartId } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: { $multiply: ["$price", "$quantity"] } },
+        },
+      },
+    ]);
+    return result[0]?.total || 0;
+  }
 
-    const result = stmt.get(cartId) as any;
-    return result?.total || 0;
+  // ============================================================
+  // Helpers
+  // ============================================================
+
+  private toCart(doc: ICart): Cart {
+    return {
+      id: doc.id,
+      session_id: doc.session_id,
+      user_id: doc.user_id || undefined,
+      created_at: doc.created_at,
+      updated_at: doc.updated_at,
+    };
+  }
+
+  private toCartItem(doc: ICartItem): CartItem {
+    return {
+      id: doc.id,
+      cart_id: doc.cart_id,
+      food_id: doc.food_id,
+      food_name: doc.food_name,
+      quantity: doc.quantity,
+      price: doc.price,
+      added_at: doc.added_at,
+    };
   }
 }

@@ -1,13 +1,11 @@
 import { Router } from "express";
-import { DatabaseService } from "../services/database.service.js";
 import { AuthService } from "../services/auth.service.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
 // Initialize auth service
-const db = DatabaseService.getInstance().getDb();
-const authService = new AuthService(db);
+const authService = new AuthService();
 
 /**
  * Register new user

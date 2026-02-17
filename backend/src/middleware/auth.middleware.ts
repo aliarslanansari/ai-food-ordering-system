@@ -1,5 +1,4 @@
 import type { Request, Response, NextFunction } from "express";
-import { DatabaseService } from "../services/database.service.js";
 import { AuthService } from "../services/auth.service.js";
 
 // Extend Express Request to include user
@@ -16,15 +15,18 @@ declare global {
   }
 }
 
+// Initialize auth service once
+const authService = new AuthService();
+
 /**
  * Middleware to authenticate JWT token
  * Adds user to request if authenticated
  */
-export function authenticateToken(
+export async function authenticateToken(
   req: Request,
   res: Response,
   next: NextFunction,
-): void {
+): Promise<void> {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
 
@@ -34,11 +36,8 @@ export function authenticateToken(
   }
 
   try {
-    const db = DatabaseService.getInstance().getDb();
-    const authService = new AuthService(db);
-
     const userId = authService.verifyToken(token);
-    const user = authService.getUserById(userId);
+    const user = await authService.getUserById(userId);
 
     if (!user) {
       res.status(401).json({ error: "User not found" });
@@ -56,11 +55,11 @@ export function authenticateToken(
  * Middleware to optionally authenticate (for routes that work with or without auth)
  * Does not return error if no token provided
  */
-export function optionalAuth(
+export async function optionalAuth(
   req: Request,
   res: Response,
   next: NextFunction,
-): void {
+): Promise<void> {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
@@ -71,11 +70,8 @@ export function optionalAuth(
   }
 
   try {
-    const db = DatabaseService.getInstance().getDb();
-    const authService = new AuthService(db);
-
     const userId = authService.verifyToken(token);
-    const user = authService.getUserById(userId);
+    const user = await authService.getUserById(userId);
 
     if (user) {
       req.user = user;

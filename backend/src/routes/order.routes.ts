@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { DatabaseService } from "../services/database.service.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
 import { OrderService } from "../services/order.service.js";
 import { CartService } from "../services/cart.service.js";
@@ -8,9 +7,8 @@ import type { Request, Response } from "express";
 const router = Router();
 
 // Initialize services
-const db = DatabaseService.getInstance().getDb();
-const orderService = new OrderService(db);
-const cartService = new CartService(db);
+const orderService = new OrderService();
+const cartService = new CartService();
 
 /**
  * POST /api/orders - Create a new order from cart
@@ -32,8 +30,8 @@ router.post("/", authenticateToken, async (req: Request, res: Response) => {
 
     // Get cart for this session/user
     const cart = session_id
-      ? cartService.getCartBySession(session_id)
-      : cartService.getCartByUser(userId);
+      ? await cartService.getCartBySession(session_id)
+      : await cartService.getCartByUser(userId);
 
     if (!cart) {
       res.status(400).json({ error: "No cart found" });
@@ -41,7 +39,7 @@ router.post("/", authenticateToken, async (req: Request, res: Response) => {
     }
 
     // Get cart items
-    const items = cartService.getCartItems(cart.id);
+    const items = await cartService.getCartItems(cart.id);
     if (items.length === 0) {
       res.status(400).json({ error: "Cart is empty" });
       return;
@@ -54,7 +52,7 @@ router.post("/", authenticateToken, async (req: Request, res: Response) => {
     );
 
     // Create order
-    const order = orderService.createOrder({
+    const order = await orderService.createOrder({
       userId,
       sessionId: session_id,
       cartId: cart.id,
@@ -67,7 +65,7 @@ router.post("/", authenticateToken, async (req: Request, res: Response) => {
     });
 
     // Clear the cart after successful order
-    cartService.clearCart(cart.id);
+    await cartService.clearCart(cart.id);
 
     res.status(201).json({
       success: true,
@@ -103,7 +101,7 @@ router.get("/", authenticateToken, async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = parseInt(req.query.offset as string) || 0;
 
-    const orders = orderService.getOrdersByUser(userId, limit, offset);
+    const orders = await orderService.getOrdersByUser(userId, limit, offset);
 
     res.json({
       orders: orders.map((order) => ({
@@ -136,7 +134,7 @@ router.get("/", authenticateToken, async (req: Request, res: Response) => {
 router.get("/stats", authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
-    const stats = orderService.getUserOrderStats(userId);
+    const stats = await orderService.getUserOrderStats(userId);
 
     res.json(stats);
   } catch (error) {
@@ -157,7 +155,7 @@ router.get(
       const userId = req.user!.id;
       const orderId = req.params.orderId as string;
 
-      const order = orderService.getOrder(orderId);
+      const order = await orderService.getOrder(orderId);
 
       if (!order) {
         res.status(404).json({ error: "Order not found" });
@@ -207,7 +205,7 @@ router.post(
       const userId = req.user!.id;
       const orderId = req.params.orderId as string;
 
-      const order = orderService.getOrder(orderId);
+      const order = await orderService.getOrder(orderId);
 
       if (!order) {
         res.status(404).json({ error: "Order not found" });
@@ -226,7 +224,7 @@ router.post(
         return;
       }
 
-      const success = orderService.cancelOrder(orderId, userId);
+      const success = await orderService.cancelOrder(orderId, userId);
 
       if (success) {
         res.json({ success: true, message: "Order cancelled successfully" });
