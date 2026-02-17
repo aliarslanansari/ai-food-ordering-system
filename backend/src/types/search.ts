@@ -31,6 +31,7 @@ export interface SearchResponse {
     reason: string;
   };
   message?: string;
+  follow_up_question?: string; // Follow-up question to suggest add-ons/sides
   suggestions?: string[];
   error?: string;
   // For add_to_cart intent

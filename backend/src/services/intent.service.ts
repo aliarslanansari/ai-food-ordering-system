@@ -32,6 +32,7 @@ export interface ExtractedIntent {
   semantic_query?: string | null;
   item_reference?: string | null;
   message?: string | null; // Dynamic message to show to user
+  follow_up_question?: string | null; // Follow-up question to suggest add-ons/sides
 }
 
 /**
@@ -87,7 +88,8 @@ Your job is to convert the CURRENT user message into STRICT JSON following EXACT
   },
   "semantic_query": string | null,
   "item_reference": string | null,
-  "message": string | null
+  "message": string | null,
+  "follow_up_question": string | null
 }
 
 Rules:
@@ -104,6 +106,7 @@ Rules:
 - For semantic_query: extract the core food preference query (e.g., "chicken high protein low carb" from "I need chicken-based lunch, high protein, low carb")
 - For item_reference: capture references like "that", "it", "the first one", "both"
 - For message: Generate a friendly, dynamic message for "recommend" intent based on what the user is looking for. Be conversational and mention their specific preferences if any (e.g., "Here are some delicious vegetarian options for you!" or "I found some great high-protein chicken dishes!"). Set to null for other intents.
+- For follow_up_question: For "recommend" intent, generate a conversational question suggesting sides, drinks, or add-ons that would complement the main dishes shown. Examples: "Would you like to add any sides or drinks?" or "Can I suggest some fresh juices or salads to go with that?" Set to null for other intents or if user is already looking for sides/drinks.
 
 Examples:
 
@@ -120,7 +123,8 @@ User: "I need something for lunch, chicken-based, high protein, low carb"
   },
   "semantic_query": "chicken high protein low carb lunch",
   "item_reference": null,
-  "message": "Here are some delicious high-protein chicken dishes perfect for your lunch!"
+  "message": "Here are some delicious high-protein chicken dishes perfect for your lunch!",
+  "follow_up_question": "Would you like to add any sides, salads, or drinks to complete your meal?"
 }
 
 User: "What vegetarian options do you have?"
@@ -136,7 +140,8 @@ User: "What vegetarian options do you have?"
   },
   "semantic_query": "vegetarian dishes",
   "item_reference": null,
-  "message": "Here are some tasty vegetarian options for you!"
+  "message": "Here are some tasty vegetarian options for you!",
+  "follow_up_question": "Can I suggest some refreshing beverages or sides to go with your meal?"
 }
 
 User: "Add two large pizzas to my cart"
@@ -152,7 +157,8 @@ User: "Add two large pizzas to my cart"
   },
   "semantic_query": null,
   "item_reference": "two large pizzas",
-  "message": null
+  "message": null,
+  "follow_up_question": null
 }
 
 User: "Tell me more about that" (after being shown items)
@@ -168,7 +174,8 @@ User: "Tell me more about that" (after being shown items)
   },
   "semantic_query": null,
   "item_reference": "that",
-  "message": null
+  "message": null,
+  "follow_up_question": null
 }
 
 User: "Show me more like this"
@@ -184,7 +191,8 @@ User: "Show me more like this"
   },
   "semantic_query": "similar items",
   "item_reference": "this",
-  "message": "Here are some similar dishes you might enjoy!"
+  "message": "Here are some similar dishes you might enjoy!",
+  "follow_up_question": "Would you like any sides or beverages with these?"
 }
 
 Now process this user message:

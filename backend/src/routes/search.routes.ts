@@ -362,6 +362,9 @@ router.post("/", optionalAuth, async (req, res) => {
       message:
         intentData.message ||
         `Found ${results.length} delicious options for you!`,
+      follow_up_question:
+        intentData.follow_up_question ||
+        "Would you like to add any sides or drinks?",
       filters: normalizedFilters,
       filter_description: filterDescription,
       semantic_query: queryText,

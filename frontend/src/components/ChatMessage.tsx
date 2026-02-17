@@ -62,6 +62,11 @@ export function ChatMessage({ message, onAddToCart }: ChatMessageProps) {
             onAddToCart={onAddToCart}
             columns={2}
           />
+          {message.followUpQuestion && (
+            <div className="bg-stone-100 rounded-lg px-3 sm:px-4 py-2 max-w-[90%] sm:max-w-[80%]">
+              <p className="text-sm">{message.followUpQuestion}</p>
+            </div>
+          )}
         </div>
       </div>
     );

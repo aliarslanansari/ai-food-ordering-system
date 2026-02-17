@@ -65,6 +65,7 @@ export function useChat() {
         intent: data.intent,
         foods: data.results,
         cartSummary: data.cart_summary,
+        followUpQuestion: data.follow_up_question,
         timestamp: Date.now(),
       });
     },

@@ -90,6 +90,7 @@ export interface ChatMessage {
   intent?: Intent;
   foods?: Food[];
   cartSummary?: CartSummary;
+  followUpQuestion?: string;
   timestamp: number;
 }
 
@@ -120,6 +121,7 @@ export interface SearchResponse {
   total: number;
   search_mode: "hybrid" | "semantic" | "keyword" | "no_results";
   message: string;
+  follow_up_question?: string;
   suggestions?: string[];
   cart_summary?: CartSummary;
   cart?: CartWithItems;
