@@ -30,7 +30,7 @@ export function CartSummary({
             cart.items.map((item) => (
               <div key={item.id} className="flex justify-between text-sm">
                 <span className="text-stone-700">
-                  {item.food_name} x{item.quantity}
+                  {item.food_name} x {item.quantity}
                 </span>
                 <span className="font-medium">
                   ₹{(item.price * item.quantity).toFixed(2)}
